@@ -1,7 +1,7 @@
 'use strict';
 document.documentElement.classList.add('js');
 const boxes = Array.from(document.querySelectorAll('[data-step]'));
-const storageKey = 'comp2211-week1-python-v3';
+const storageKey = 'comp2211-week1-python-v4';
 let storageAvailable = true;
 try {
   const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
