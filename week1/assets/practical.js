@@ -1,7 +1,7 @@
 'use strict';
 document.documentElement.classList.add('js');
 const boxes = Array.from(document.querySelectorAll('[data-step]'));
-const storageKey = 'comp2211-week1-python-v1';
+const storageKey = 'comp2211-week1-python-v2';
 let storageAvailable = true;
 try {
   const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
@@ -29,15 +29,6 @@ document.querySelector('#reset').addEventListener('click', () => {
   updateProgress();
 });
 updateProgress();
-
-const hosted = ['http:', 'https:'].includes(location.protocol);
-const practiceURL = hosted ? new URL('data/practice-report.txt', location.href).href : 'http://127.0.0.1:8000/data/practice-report.txt';
-const urlLink = document.querySelector('#practice-url');
-urlLink.href = practiceURL;
-urlLink.textContent = practiceURL;
-document.querySelector('#url-note').textContent = hosted
-  ? 'Open the link and copy the address for your Python script.'
-  : 'You opened the page from disk. Start the local server using the instructions below, then use this URL.';
 
 async function copyCode(button) {
   const code = button.closest('.codebox').querySelector('code');
