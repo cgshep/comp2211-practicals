@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="description" content="A two-hour introduction to Python for security practicals: scripts, loops, bytes, files and HTTP requests."><title>Week 1 · Python for security practicals | Durham University</title><link rel="stylesheet" href="assets/style.css"><script src="assets/practical.js" defer></script></head><body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="masthead"><div class="wrap"><div class="brand">COMP2211 Security<small>Week 1 practical</small></div><nav aria-label="Main navigation"><a href="#part1">Start</a><a href="#reference">Reference</a></nav><img class="durham-logo" src="assets/durham-logo.svg" alt="Durham University" width="162"></div></header>
+<main id="main"><section class="hero"><div class="wrap"><p class="tag">Level 2 · Practical 01</p><h1>Python for security practicals</h1><p style="margin-top:18px">A short script can inspect a file, work through a list of values or retrieve a web page. Today you will write a few small scripts, then combine them to download and check a practice report.</p><div class="session-meta"><span>About 2 hours</span><span>No Python experience needed</span><span>Python 3 · no extra packages</span></div><div class="actions"><a class="button" href="#part1">Start the practical</a><a class="button secondary" href="week1-files.zip" download>Download practice files</a><button class="button secondary print-button js-only" id="print" type="button">Print / save PDF</button></div></div></section>
+<div class="wrap layout"><aside class="toc" aria-label="Practical contents"><h2>Your route</h2><ol>
+<li><a href="#part1">1. Run a script<span>0–10 min · 10 minutes</span></a></li><li><a href="#part2">2. Values and text<span>10–25 min · 15 minutes</span></a></li><li><a href="#part3">3. Lists, choices and loops<span>25–45 min · 20 minutes</span></a></li><li><a href="#part4">4. Work with bytes<span>45–70 min · 25 minutes</span></a></li><li><a href="#part5">5. Read and save files<span>70–85 min · 15 minutes</span></a></li><li><a href="#part6">6. Request a URL<span>85–105 min · 20 minutes</span></a></li><li><a href="#part7">7. Write a small checker<span>105–120 min · 15 minutes</span></a></li></ol><div class="extra"><a href="#extensions">Optional practice</a><a href="#troubleshooting">When something goes wrong</a><a href="#reference">Quick reference</a></div><div class="js-only"><p class="progress-text" id="progress-label" aria-live="polite">0 of 7 parts complete</p><progress id="progress" max="7" value="0" aria-labelledby="progress-label"></progress><button type="button" class="reset" id="reset">Reset ticks</button><p class="screen-status" id="storage-note">Ticks are saved in this browser only.</p></div></aside><div class="content">
+<section class="section" id="before"><h2>Before you begin</h2><p>Work through Parts 1–7 in order. The times are a guide and include time to try things and correct mistakes. If an exercise takes longer, use its hint or ask a demonstrator. The optional practice can wait.</p><p>For each example: run it, change something, then explain what changed. Keep your scripts and a few notes about their output. By the end, you should be able to:</p><ul><li>Run and edit a Python script.</li><li>Use a loop and a condition to select items.</li><li>Distinguish text from bytes and convert between them.</li><li>Read a file, request a URL and save a short result.</li></ul><div class="callout"><p><strong>Need another explanation?</strong> Use the linked <a href="https://www.learnpython.org/">LearnPython.org</a> lessons when useful. They are optional; you do not need to finish the whole tutorial. Use a local Python editor for the file and URL exercises.</p></div><p>The supplied data is made for this practical. Use these files and the practice URL below for the exercises.</p></section>
+
+<section class="section" id="part1" aria-labelledby="title1"><p class="eyebrow">Part 1 · 10 minutes</p><h2 id="title1">Run your first script</h2><p class="goal">Create a file, run it, then make a small change.</p>
+<ol><li>Download the <a href="week1-files.zip" download>practice files</a> and extract the ZIP. Open the extracted <code>week1-python</code> folder. It contains a <code>data</code> folder.</li><li>Open your Python editor. If you have <strong>IDLE (Python 3)</strong>, choose <strong>File → New File</strong>. Otherwise use the editor provided in your lab and ask a demonstrator if you are unsure how to run Python.</li><li>Type the following into a new file and save it as <code>hello.py</code> inside <code>week1-python</code>. Use a plain text/code editor, not a word processor.</li></ol>
+<div class="codebox "><div class="codebar"><span>Python · hello.py</span><button class="copy js-only" type="button" aria-label="Copy Python · hello.py">Copy</button></div><pre tabindex="0"><code>print(&quot;Hello, security practical!&quot;)
+print(3 + 4)</code></pre></div>
+<p>In IDLE, choose <strong>Run → Run Module</strong> (F5). The output appears in its Shell window. A <strong>script</strong> is a file of instructions; Python runs these instructions from top to bottom.</p>
+<div class="codebox output"><div class="codebar"><span>Expected output</span></div><pre tabindex="0"><code>Hello, security practical!
+7</code></pre></div>
+<p><code>print(...)</code> displays a value. It is a <strong>function</strong>: a named operation. The value inside the parentheses is its input. Quotation marks tell Python that something is text; <code>3 + 4</code> asks it to calculate a sum.</p><div class="task"><h3>Try it</h3><p>Change the greeting. Add a third line that prints <code>12 * 5</code>, where <code>*</code> means multiplication. Save and run the file again.</p></div>
+<details><summary>Using a terminal instead of IDLE</summary><p>Open a terminal in <code>week1-python</code> (your file manager may offer “Open in Terminal”). Run the version command first; it should report Python 3. Then run your script. These are <strong>terminal commands</strong>, not Python code.</p><div class="codebox "><div class="codebar"><span>Terminal · Linux / macOS</span><button class="copy js-only" type="button" aria-label="Copy Terminal · Linux / macOS">Copy</button></div><pre tabindex="0"><code>python3 --version
+python3 hello.py</code></pre></div><div class="codebox "><div class="codebar"><span>Terminal · Windows</span><button class="copy js-only" type="button" aria-label="Copy Terminal · Windows">Copy</button></div><pre tabindex="0"><code>py -3 --version
+py -3 hello.py</code></pre></div><p>If your lab uses <code>python</code> instead, check <code>python --version</code> reports Python 3 and use that command throughout. A “command not found” message means the terminal cannot find Python; ask a demonstrator. If you see <code>&gt;&gt;&gt;</code>, you are inside Python: type <code>exit()</code> before running terminal commands.</p></details>
+<details><summary>Checkpoint</summary><p>Your changed greeting appears, followed by <code>7</code> and <code>60</code>. If the old greeting appears, save the file and check which file you ran.</p></details>
+<p class="reading-link">Extra help: <a href="https://www.learnpython.org/en/Hello%2C_World%21">LearnPython: Hello, World!</a></p>
+<label class="completion"><input type="checkbox" data-step="1"> <span>I can edit, save and run hello.py.</span></label>
+</section>
+<section class="section" id="part2" aria-labelledby="title2"><p class="eyebrow">Part 2 · 15 minutes</p><h2 id="title2">Values and text</h2><p class="goal">Store values and use them in a message.</p>
+<p>Create <code>values.py</code> in the same folder. A <strong>variable</strong> is a name you give to a value. The <code>=</code> sign assigns a value to a name.</p>
+<div class="codebox "><div class="codebar"><span>Python · values.py</span><button class="copy js-only" type="button" aria-label="Copy Python · values.py">Copy</button></div><pre tabindex="0"><code>name = &quot;Alex&quot;
+files_checked = 3
+files_remaining = 2
+
+print(&quot;Hello&quot;, name)
+print(&quot;Total files:&quot;, files_checked + files_remaining)
+print(&quot;Characters in the name:&quot;, len(name))</code></pre></div>
+<p><code>name</code> holds a <strong>string</strong> (<code>str</code>), which is text. The two counts are <strong>integers</strong> (<code>int</code>), which are whole numbers. <code>len(...)</code> gives the length of a value such as a string. Commas let <code>print</code> display several values with spaces between them.</p><div class="task"><h3>Try it</h3><ol><li>Before running the script, predict the total. Run it and check.</li><li>Change <code>name</code> and both counts, then run it again.</li><li>Replace the first line with the line below. Run it and type a name when asked.</li></ol></div>
+<div class="codebox "><div class="codebar"><span>Python · replacement first line</span><button class="copy js-only" type="button" aria-label="Copy Python · replacement first line">Copy</button></div><pre tabindex="0"><code>name = input(&quot;Your first name: &quot;)</code></pre></div>
+<p><code>input(...)</code> shows a prompt and waits for you to type something and press Enter. The result is text, even if you type digits.</p>
+<details><summary>Checkpoint: text or number?</summary><p>Predict these two outputs, then try them at the end of your script.</p><div class="codebox "><div class="codebar"><span>Python · add to values.py</span><button class="copy js-only" type="button" aria-label="Copy Python · add to values.py">Copy</button></div><pre tabindex="0"><code>print(&quot;3&quot; + &quot;2&quot;)
+print(3 + 2)</code></pre></div><p>The outputs are <code>32</code> and <code>5</code>. With strings, <code>+</code> joins text. With integers, it adds numbers. Use <code>int("3")</code> to convert the text <code>"3"</code> to the number <code>3</code>. Text such as <code>"three"</code> cannot be converted this way.</p></details>
+<p class="reading-link">Extra help: <a href="https://www.learnpython.org/en/Variables_and_Types">LearnPython: Variables and Types</a></p>
+<label class="completion"><input type="checkbox" data-step="2"> <span>I can explain the difference between "3" and 3.</span></label>
+</section>
+<section class="section" id="part3" aria-labelledby="title3"><p class="eyebrow">Part 3 · 20 minutes</p><h2 id="title3">Lists, choices and loops</h2><p class="goal">Repeat an operation and act only on matching values.</p>
+<p>Create <code>checks.py</code>. A <strong>list</strong> holds several values in order. Square brackets surround the list; commas separate its items.</p>
+<div class="codebox "><div class="codebar"><span>Python · checks.py</span><button class="copy js-only" type="button" aria-label="Copy Python · checks.py">Copy</button></div><pre tabindex="0"><code>statuses = [200, 404, 200, 403]
+
+for status in statuses:
+    print(&quot;Status:&quot;, status)
+    if status == 200:
+        print(&quot;Request succeeded&quot;)
+    else:
+        print(&quot;Check this response&quot;)</code></pre></div>
+<p><code>for</code> runs the indented instructions once for each item. On each pass, <code>status</code> takes the next value. <code>if</code> checks a condition; <code>else</code> handles the other case. <code>==</code> compares values. It is different from <code>=</code>, which assigns a value.</p><p>These are HTTP status codes: <code>200</code> means success, <code>404</code> means not found and <code>403</code> means forbidden. Here they are just numbers in a list; the script has not contacted a server.</p><div class="callout"><p><strong>Spaces matter.</strong> Use four spaces for each level of indentation. The second <code>print</code> is eight spaces in because it is inside both the loop and the <code>if</code>. A colon introduces each indented block. Most editors add the spaces after you press Enter.</p></div><div class="task"><h3>Try it</h3><ol><li>Run the example. Add <code>404</code> to the end of the list and run it again.</li><li>Count successful responses: put <code>successes = 0</code> before the loop. Inside the <code>if</code> block, add <code>successes = successes + 1</code>.</li><li>After the loop, add <code>print("Successful:", successes)</code> with <strong>no indentation</strong>. It should print the total once.</li></ol></div>
+<details><summary>Hint: where does the counter go?</summary><p>Set the counter to zero once, before <code>for</code>. Put the line that increases it directly below <code>print("Request succeeded")</code>, at the same indentation. Keeping the final print outside the loop gives one total.</p></details>
+<details><summary>Checkpoint</summary><p>The final total is <code>2</code>, including after you add another <code>404</code>. Change one <code>404</code> to <code>200</code>: the total should increase to <code>3</code>. If the total keeps resetting, check where you set it to zero.</p></details>
+<p class="reading-link">Extra help: <a href="https://www.learnpython.org/en/Lists">Lists</a>, <a href="https://www.learnpython.org/en/Conditions">Conditions</a> and <a href="https://www.learnpython.org/en/Loops">Loops</a> on LearnPython.</p>
+<label class="completion"><input type="checkbox" data-step="3"> <span>I can use a loop and count items that meet a condition.</span></label>
+</section>
+<section class="section" id="part4" aria-labelledby="title4"><p class="eyebrow">Part 4 · 25 minutes</p><h2 id="title4">Work with bytes</h2><p class="goal">Inspect raw values and see how an encoding connects bytes to text.</p>
+<p>Files and network responses contain bytes. A <strong>byte</strong> is eight bits and can hold a value from 0 to 255. Python’s <code>bytes</code> type holds a sequence of these values. Some byte sequences represent text; others represent images, executable code or other data.</p><h3>Text → bytes → text</h3><p>Create <code>byte_work.py</code> and run this example.</p>
+<div class="codebox "><div class="codebar"><span>Python · byte_work.py</span><button class="copy js-only" type="button" aria-label="Copy Python · byte_work.py">Copy</button></div><pre tabindex="0"><code>text = &quot;café&quot;
+raw = text.encode(&quot;utf-8&quot;)
+
+print(text)
+print(raw)
+print(&quot;Characters:&quot;, len(text))
+print(&quot;Bytes:&quot;, len(raw))
+print(raw.decode(&quot;utf-8&quot;))</code></pre></div>
+<p><code>.encode("utf-8")</code> converts text to bytes using UTF-8. <code>.decode("utf-8")</code> interprets those bytes as text. Operations written after a dot, such as <code>text.encode(...)</code>, are called <strong>methods</strong>: they act on the value before the dot.</p><p>The word has four characters but uses five UTF-8 bytes: <code>é</code> needs two. The <code>b</code> in Python’s display <code>b'caf\xc3\xa9'</code> marks a bytes value; it is not an extra byte. The <code>\x</code> notation shows a byte value in hexadecimal.</p><h3>Positions and slices</h3><p>Add the following to the same file. <code>b"ABC"</code> is a short way to write bytes containing these ASCII characters.</p>
+<div class="codebox "><div class="codebar"><span>Python · add to byte_work.py</span><button class="copy js-only" type="button" aria-label="Copy Python · add to byte_work.py">Copy</button></div><pre tabindex="0"><code>message = b&quot;ABC&quot;
+print(message[0])
+print(message[:2])
+print(message.hex())
+
+for value in message:
+    print(value)</code></pre></div>
+<div class="bytes-grid" role="group" aria-label="The bytes in ABC"><div><small>Position 0</small><strong>A</strong><small>65 decimal · 41 hex</small></div><div><small>Position 1</small><strong>B</strong><small>66 decimal · 42 hex</small></div><div><small>Position 2</small><strong>C</strong><small>67 decimal · 43 hex</small></div></div><p>Positions start at zero. <code>message[0]</code> gives one byte as an integer: <code>65</code>. A <strong>slice</strong> such as <code>message[:2]</code> gives bytes up to, but excluding, position 2: <code>b'AB'</code>. Looping through bytes also gives integers.</p><p>Hexadecimal uses the digits <code>0–9</code> and <code>a–f</code>. Two hex digits describe one byte. <code>.hex()</code> returns a text representation; it does not change the original bytes.</p><div class="task"><h3>Try it</h3><ol><li>Change <code>"café"</code> to <code>"cafe"</code>. Predict both lengths, then check.</li><li>Print the final byte of <code>message</code> using its position.</li><li>Use <code>bytes.fromhex("48 69 21")</code> to make a new bytes value. Print it, then decode it as UTF-8.</li></ol></div>
+<details><summary>Hint</summary><p>The final position in a three-byte value is <code>2</code>. For the hex exercise, assign the result to a variable, for example <code>greeting = bytes.fromhex("48 69 21")</code>, then use <code>greeting.decode("utf-8")</code>.</p></details>
+<details><summary>Checkpoint</summary><p><code>"cafe"</code> has four characters and four UTF-8 bytes. <code>message[2]</code> is <code>67</code>. The hex bytes decode to <code>Hi!</code>. Explain why <code>message[0]</code> gives a number but <code>message[:1]</code> gives <code>b'A'</code>.</p></details>
+<div class="callout"><p><strong>Not every file is text.</strong> Decoding arbitrary bytes as UTF-8 can raise <code>UnicodeDecodeError</code>. Keep binary data as bytes. Removing or ignoring undecodable bytes changes the data.</p></div>
+<label class="completion"><input type="checkbox" data-step="4"> <span>I can distinguish str from bytes, inspect a byte and take a slice.</span></label>
+</section>
+<section class="section" id="part5" aria-labelledby="title5"><p class="eyebrow">Part 5 · 15 minutes</p><h2 id="title5">Read and save files</h2><p class="goal">Apply the same operations to a small file on disk.</p>
+<p>Create <code>files.py</code> alongside the <code>data</code> folder. <code>pathlib</code> is a <strong>module</strong>, a collection of tools included with Python. The <code>import</code> line makes its <code>Path</code> tool available.</p>
+<div class="codebox "><div class="codebar"><span>Python · files.py</span><button class="copy js-only" type="button" aria-label="Copy Python · files.py">Copy</button></div><pre tabindex="0"><code>from pathlib import Path
+
+raw = Path(&quot;data/sample.bin&quot;).read_bytes()
+print(&quot;Bytes:&quot;, len(raw))
+print(&quot;Hex:&quot;, raw.hex())
+print(&quot;First byte:&quot;, raw[0])
+
+Path(&quot;sample-copy.bin&quot;).write_bytes(raw)</code></pre></div>
+<p><code>Path("data/sample.bin")</code> identifies a file in the <code>data</code> folder. <code>read_bytes()</code> reads it into memory. <code>write_bytes(raw)</code> saves the bytes to another file. Here the paths are relative to your <strong>current working folder</strong>; run your scripts from <code>week1-python</code>.</p><p><strong>Writing to an existing filename replaces its contents.</strong> Use the new output names shown here so the supplied data stays available.</p><div class="task"><h3>Try it</h3><ol><li>Run the script. Locate <code>sample-copy.bin</code> in your folder.</li><li>Add a loop that prints each byte as an integer. How many values are greater than <code>127</code>? You can count by looking at the output.</li><li>Add the text-file example below and run the script again.</li></ol></div>
+<div class="codebox "><div class="codebar"><span>Python · add to files.py</span><button class="copy js-only" type="button" aria-label="Copy Python · add to files.py">Copy</button></div><pre tabindex="0"><code>text = Path(&quot;data/practice-report.txt&quot;).read_text(encoding=&quot;utf-8&quot;)
+lines = text.splitlines()
+print(&quot;Lines:&quot;, len(lines))
+print(lines[0])
+
+Path(&quot;notes.txt&quot;).write_text(&quot;I inspected six bytes.\n&quot;, encoding=&quot;utf-8&quot;)</code></pre></div>
+<p><code>read_text(...)</code> reads and decodes in one step. <code>encoding="utf-8"</code> names an option passed to the method. <code>splitlines()</code> turns the text into a list of lines, removing the line endings. In a string, <code>\n</code> writes a newline.</p>
+<details><summary>Checkpoint</summary><p>The binary file contains <code>6</code> bytes. Its hex is <code>0041427f80ff</code>; its first byte is <code>0</code>. Two values are greater than <code>127</code>: <code>128</code> and <code>255</code>. The text file has <code>5</code> lines and begins <code>OK backup finished</code>.</p></details>
+<details><summary>FileNotFoundError?</summary><p>Check that you extracted the ZIP and saved your scripts beside <code>data</code>. To see where Python is looking, add <code>print(Path.cwd())</code> after the import. In IDLE, save the script in <code>week1-python</code> and run it with F5. In a terminal, open the terminal in that folder. Check the spelling and capitalisation of the path.</p></details>
+<label class="completion"><input type="checkbox" data-step="5"> <span>I can read bytes, read text and save a separate output file.</span></label>
+</section>
+<section class="section" id="part6" aria-labelledby="title6"><p class="eyebrow">Part 6 · 20 minutes</p><h2 id="title6">Request a URL</h2><p class="goal">Retrieve the same practice report over HTTP and inspect the response.</p>
+<p>A browser requests a URL and displays the response. Python can make a request too. We will use <code>urllib.request</code>, which is included with Python, so you do not need to install a package.</p><p>Open the <a id="practice-link" href="data/practice-report.txt">practice report</a> in your browser. Copy its full address from the address bar, including <code>https://</code> (or <code>http://</code> for the local fallback).</p><div class="js-only"><strong>Practice URL for this copy of the page</strong><a class="url-card" id="practice-url" href="data/practice-report.txt">data/practice-report.txt</a><p class="screen-status" id="url-note"></p></div><p>Create <code>fetch_report.py</code>. Run it and paste the full URL when prompted.</p>
+<div class="codebox "><div class="codebar"><span>Python · fetch_report.py</span><button class="copy js-only" type="button" aria-label="Copy Python · fetch_report.py">Copy</button></div><pre tabindex="0"><code>from urllib.request import urlopen
+
+url = input(&quot;Paste the practice URL: &quot;).strip()
+
+with urlopen(url, timeout=10) as response:
+    print(&quot;HTTP status:&quot;, response.status)
+    raw = response.read()
+
+print(&quot;Downloaded bytes:&quot;, len(raw))
+text = raw.decode(&quot;utf-8&quot;)
+print(text)</code></pre></div>
+<ul><li><code>.strip()</code> removes accidental spaces at the start or end of your input.</li><li><code>urlopen(...)</code> makes a request. Here it uses HTTP GET to retrieve the resource. <code>timeout=10</code> sets a timeout for blocking network operations, in seconds.</li><li><code>with ... as response:</code> keeps the response open for the indented block, then closes it. Keep both lines inside that block indented.</li><li><code>response.read()</code> gives the response body as <strong>bytes</strong>. This supplied file is UTF-8 text, so we decode it with UTF-8. Other resources may use other encodings or contain binary data.</li></ul><div class="task"><h3>Try it</h3><ol><li>Check that the status is <code>200</code> and that five report lines appear.</li><li>Add <code>print(raw[:10])</code> after the <code>with</code> block to inspect the first ten downloaded bytes.</li><li>Change the filename in your input URL to <code>no-such-report.txt</code> and run the script once. Read the final line of the error. Restore the correct URL afterwards.</li></ol></div>
+<details><summary>Checkpoint</summary><p>The first ten bytes are <code>b'OK backup '</code>. A missing resource on the practical site should give <code>HTTP Error 404: Not Found</code>. In this case, <code>urlopen</code> raises an error before the indented block runs. A script can stop on an error; it does not necessarily reach the final print.</p></details>
+<details><summary>Working offline, or unable to reach the hosted page?</summary><p>You can still practise a real HTTP request on your own computer. Open a terminal inside the extracted <code>week1-python</code> folder and run:</p><div class="codebox "><div class="codebar"><span>Terminal · Linux / macOS</span><button class="copy js-only" type="button" aria-label="Copy Terminal · Linux / macOS">Copy</button></div><pre tabindex="0"><code>python3 -m http.server 8000 --bind 127.0.0.1</code></pre></div><div class="codebox "><div class="codebar"><span>Terminal · Windows</span><button class="copy js-only" type="button" aria-label="Copy Terminal · Windows">Copy</button></div><pre tabindex="0"><code>py -3 -m http.server 8000 --bind 127.0.0.1</code></pre></div><p>Leave this terminal running. Use IDLE or a second terminal to run your Python script. Enter <code>http://127.0.0.1:8000/data/practice-report.txt</code> when it asks for the URL. <code>127.0.0.1</code> means this computer. Stop the server afterwards with Ctrl+C. If port 8000 is already in use, use 8001 in both the command and URL.</p><p>A URL beginning <code>file://</code> opens a disk file rather than making an HTTP request; use the local server for this part.</p></details>
+<label class="completion"><input type="checkbox" data-step="6"> <span>I can request the report, decode the response and recognise a 404 error.</span></label>
+</section>
+<section class="section" id="part7" aria-labelledby="title7"><p class="eyebrow">Part 7 · 15 minutes</p><h2 id="title7">Write a small checker</h2><p class="goal">Combine the pieces into one script and record what it finds.</p>
+<p>Create <code>check_report.py</code>. You may copy from your earlier scripts. The report uses one event per line, beginning with <code>OK</code> or <code>WARN</code>.</p><div class="task"><h3>Your task</h3><ol><li>Ask for the practice URL, download it and decode it as UTF-8.</li><li>Loop over <code>text.splitlines()</code>. Print only the lines that start with <code>WARN</code>.</li><li>Count those lines and print the total.</li><li>Save the total to <code>summary.txt</code>, then open that file and check it.</li></ol></div><p>Two useful lines are shown below. <code>startswith(...)</code> checks the start of a string. In an <strong>f-string</strong>, Python substitutes the value inside braces into the text. The <code>f</code> goes immediately before the opening quote.</p>
+<div class="codebox "><div class="codebar"><span>Python · pieces to use in your script</span><button class="copy js-only" type="button" aria-label="Copy Python · pieces to use in your script">Copy</button></div><pre tabindex="0"><code>if line.startswith(&quot;WARN&quot;):
+    print(line)
+
+summary = f&quot;Warning lines: {warnings}\n&quot;</code></pre></div>
+<p>This is a fragment, not a complete script: your loop must supply <code>line</code>, and your counter must supply <code>warnings</code>. Remember to import <code>Path</code> if you use it to save the summary.</p>
+<details><summary>Hint 1: arrange the steps</summary><p>Reuse the download and decode steps from Part 6. Set <code>warnings = 0</code> before a loop beginning <code>for line in text.splitlines():</code>. Put the <code>if</code> inside the loop. Increase the counter only inside the <code>if</code>.</p></details>
+<details><summary>Hint 2: save the count</summary><p>After the loop, build <code>summary</code> using the f-string above. Print it, then save it with <code>Path("summary.txt").write_text(summary, encoding="utf-8")</code>. The save line goes outside the loop.</p></details>
+<details><summary>Check your result</summary><div class="codebox output"><div class="codebar"><span>Expected findings</span></div><pre tabindex="0"><code>WARN test account unused
+WARN sample file missing
+Warning lines: 2</code></pre></div><p>Your script may also print the HTTP status and byte count. The file <code>summary.txt</code> should contain <code>Warning lines: 2</code>.</p><p>To check your counting logic, temporarily replace the downloaded text with <code>text = "OK all clear\n"</code> before the loop. The total should become zero. Restore the download afterwards. This test does not need another network request if you temporarily remove the download block too.</p></details>
+<h3>Keep a short record</h3><p>In your notes, record the input URL, the script you ran and the two warning lines. Explain why you decoded the response before looking for <code>"WARN"</code>. This habit will help you make your later coursework investigations reproducible.</p>
+<label class="completion"><input type="checkbox" data-step="7"> <span>My checker finds two warning lines and saves the correct total.</span></label>
+</section>
+<section class="section" id="extensions"><p class="eyebrow">Optional · outside the two-hour route</p><h2>If you have time</h2><p>Choose one exercise. These introduce ideas you can return to later.</p>
+<details><summary>A. Package the repeated work in a function</summary><p>A function lets you name a piece of work and reuse it. <code>def</code> defines it, the parameter <code>text</code> receives its input, and <code>return</code> sends a result back. Create <code>functions.py</code>:</p><div class="codebox "><div class="codebar"><span>Python · functions.py</span><button class="copy js-only" type="button" aria-label="Copy Python · functions.py">Copy</button></div><pre tabindex="0"><code>def count_warnings(text):
+    warnings = 0
+    for line in text.splitlines():
+        if line.startswith(&quot;WARN&quot;):
+            warnings = warnings + 1
+    return warnings
+
+print(count_warnings(&quot;OK one\nWARN two\n&quot;))
+print(count_warnings(&quot;OK one\n&quot;))</code></pre></div><p>Check that the outputs are <code>1</code> and <code>0</code>. Add a third test with two warning lines. Then use the function in your report checker.</p></details>
+<details><summary>B. Recognise a Base64 representation</summary><p>Base64 represents bytes using printable characters. It is reversible without a secret key and provides no confidentiality. Create <code>encoding_practice.py</code>:</p><div class="codebox "><div class="codebar"><span>Python · encoding_practice.py</span><button class="copy js-only" type="button" aria-label="Copy Python · encoding_practice.py">Copy</button></div><pre tabindex="0"><code>import base64
+
+raw = b&quot;A small practice message&quot;
+encoded = base64.b64encode(raw)
+print(encoded)
+print(base64.b64decode(encoded).decode(&quot;utf-8&quot;))</code></pre></div><p>Change the message and repeat the round trip. Explain which variables contain bytes and why the last line also calls <code>decode("utf-8")</code>. Base64 decoding recovers the bytes; UTF-8 decoding interprets them as text.</p></details>
+<details><summary>C. Handle a failed request</summary><p>An <strong>exception</strong> reports a problem. <code>try</code> runs some code, and a matching <code>except</code> handles a particular kind of exception. Create <code>fetch_with_errors.py</code>:</p><div class="codebox "><div class="codebar"><span>Python · fetch_with_errors.py</span><button class="copy js-only" type="button" aria-label="Copy Python · fetch_with_errors.py">Copy</button></div><pre tabindex="0"><code>from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
+
+url = input(&quot;Paste the practice URL: &quot;).strip()
+try:
+    with urlopen(url, timeout=10) as response:
+        raw = response.read()
+except HTTPError as error:
+    print(&quot;HTTP error:&quot;, error.code)
+except URLError as error:
+    print(&quot;Could not reach the URL:&quot;, error.reason)
+except TimeoutError:
+    print(&quot;The request timed out&quot;)
+else:
+    print(raw.decode(&quot;utf-8&quot;))</code></pre></div><p>Try the valid practice URL and the missing filename from Part 6. <code>HTTPError</code> must come before <code>URLError</code> because it is a more specific kind of that error. Here, <code>else</code> runs only if the <code>try</code> block succeeds. This example handles common request failures; it still assumes the response is UTF-8 text.</p></details>
+</section>
+<section class="section" id="troubleshooting"><h2>When something goes wrong</h2><p>Read the last line of the error first, then find the line number in your own script. Change one thing and run it again.</p><div class="table-scroll"><table><thead><tr><th scope="col">Message or symptom</th><th scope="col">What to check</th></tr></thead><tbody>
+<tr><td><code>SyntaxError</code></td><td>Look for a missing quote, parenthesis or colon. The mistake can be just before the reported position.</td></tr>
+<tr><td><code>IndentationError</code></td><td>Use four spaces per block level. Do not mix tabs and spaces.</td></tr>
+<tr><td><code>NameError</code></td><td>Check spelling and capitalisation, and that the variable was assigned before this line ran.</td></tr>
+<tr><td><code>TypeError</code></td><td>Check whether you have text, bytes or a number. <code>print(type(value))</code> shows a variable’s type; replace <code>value</code> with its actual name.</td></tr>
+<tr><td><code>FileNotFoundError</code></td><td>Check the extracted folder, relative path and current working folder. See Part 5.</td></tr>
+<tr><td><code>UnicodeDecodeError</code></td><td>The bytes do not match the encoding you chose. For the binary sample, inspect bytes or hex instead.</td></tr>
+<tr><td><code>HTTPError: 404</code></td><td>Check the full practice URL and filename. This is the expected result of Part 6’s missing-file test.</td></tr>
+<tr><td><code>URLError</code> or timeout</td><td>Check the URL and network connection. If using the local server, check it is still running and the port matches. Try the local fallback in Part 6 if needed.</td></tr>
+<tr><td>Certificate verification failed</td><td>Ask a demonstrator to check the Python installation or use the local fallback. Keep HTTPS certificate verification enabled.</td></tr>
+<tr><td>Script seems to do nothing</td><td>Check for an <code>input</code> prompt waiting in the Shell or terminal. Save your file, and check that you ran the right one.</td></tr>
+</tbody></table></div></section>
+<section class="section" id="reference"><h2>Quick reference</h2><div class="table-scroll"><table><thead><tr><th scope="col">Task</th><th scope="col">Example</th></tr></thead><tbody>
+<tr><td>Display a value</td><td><code>print(value)</code></td></tr><tr><td>Ask for text</td><td><code>name = input("Name: ")</code></td></tr><tr><td>Get a length</td><td><code>len(data)</code></td></tr><tr><td>Compare values</td><td><code>status == 200</code></td></tr><tr><td>First item / first two items</td><td><code>data[0]</code> / <code>data[:2]</code></td></tr><tr><td>Text → bytes</td><td><code>text.encode("utf-8")</code></td></tr><tr><td>Bytes → text</td><td><code>raw.decode("utf-8")</code></td></tr><tr><td>Bytes → hex text</td><td><code>raw.hex()</code></td></tr><tr><td>Hex text → bytes</td><td><code>bytes.fromhex("41 42")</code></td></tr><tr><td>Text → list of lines</td><td><code>text.splitlines()</code></td></tr><tr><td>Check a line’s beginning</td><td><code>line.startswith("WARN")</code></td></tr></tbody></table></div>
+<h3>Further reading</h3><p>Use these when you need to look something up; they are not extra work for today.</p><ul><li><a href="https://www.learnpython.org/">LearnPython.org</a>: short, interactive introductions.</li><li><a href="https://docs.python.org/3/tutorial/controlflow.html">Python tutorial: control flow</a> and <a href="https://docs.python.org/3/tutorial/inputoutput.html">input and output</a>.</li><li><a href="https://docs.python.org/3/library/stdtypes.html#binary-sequence-types-bytes-bytearray-memoryview">Python reference: bytes</a>, <a href="https://docs.python.org/3/library/pathlib.html">pathlib</a>, <a href="https://docs.python.org/3/library/urllib.request.html">urllib.request</a> and <a href="https://docs.python.org/3/library/base64.html">base64</a>.</li></ul><p>Classes, comprehensions, regular expressions and third-party packages can wait. The scripts you have written today give you a starting point for reading data and automating small checks.</p></section>
+</div></div></main><footer><div class="wrap"><p>COMP2211 Security · Week 1 practical<br>Durham University · Dr Carlton Shepherd</p><div class="footer-links"><a href="#main">Back to top</a><a href="week1-files.zip" download>Practice files</a></div></div></footer><div class="sr-only" id="copy-status" aria-live="polite"></div></body></html>
