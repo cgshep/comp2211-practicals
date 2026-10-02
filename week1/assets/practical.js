@@ -1,34 +1,5 @@
 'use strict';
 document.documentElement.classList.add('js');
-const boxes = Array.from(document.querySelectorAll('[data-step]'));
-const storageKey = 'comp2211-week1-python-v4';
-let storageAvailable = true;
-try {
-  const saved = JSON.parse(localStorage.getItem(storageKey) || '[]');
-  if (Array.isArray(saved)) boxes.forEach(box => { box.checked = saved.includes(box.dataset.step); });
-  localStorage.setItem(storageKey, JSON.stringify(boxes.filter(b => b.checked).map(b => b.dataset.step)));
-} catch (_) {
-  storageAvailable = false;
-  document.querySelector('#storage-note').textContent = 'Ticks last for this visit; browser storage is unavailable.';
-}
-function updateProgress() {
-  const selected = boxes.filter(box => box.checked).map(box => box.dataset.step);
-  document.querySelector('#progress').value = selected.length;
-  document.querySelector('#progress-label').textContent = `${selected.length} of 7 parts complete`;
-  if (storageAvailable) {
-    try { localStorage.setItem(storageKey, JSON.stringify(selected)); }
-    catch (_) {
-      storageAvailable = false;
-      document.querySelector('#storage-note').textContent = 'Ticks last for this visit; browser storage is unavailable.';
-    }
-  }
-}
-boxes.forEach(box => box.addEventListener('change', updateProgress));
-document.querySelector('#reset').addEventListener('click', () => {
-  boxes.forEach(box => { box.checked = false; });
-  updateProgress();
-});
-updateProgress();
 
 async function copyCode(button) {
   const code = button.closest('.codebox').querySelector('code');
