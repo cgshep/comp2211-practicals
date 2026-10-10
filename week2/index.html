@@ -1,26 +1,4 @@
 <!DOCTYPE html>
-<<<<<<< HEAD
-<html lang="en-GB">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light">
-<title>Week 2: Applied Cryptography | COMP2211 Security | Durham University</title>
-<link rel="stylesheet" href="../assets/style.css">
-</head>
-<body>
-<a class="skip-link" href="#main">Skip to content</a>
-<header class="masthead"><div class="wrap">
-<div class="brand">COMP2211 Security<small>Week 2 practical</small></div>
-<nav aria-label="Main navigation"><a href="../index.html">All practicals</a></nav>
-<img class="durham-logo" src="../assets/durham-logo.svg" width="162" alt="Durham University">
-</div></header>
-<main id="main"><section class="hero"><div class="wrap"><p class="course">Week 2</p><h1>Applied Cryptography</h1><p class="course" style="margin-top:18px">Dr Carlton Shepherd</p></div></section>
-<section class="wrap week-notice" aria-labelledby="forthcoming"><h2 id="forthcoming">Forthcoming</h2><p>The exercises and practice files for this week will be added here.</p></section></main>
-<footer><div class="wrap"><p>COMP2211 Security<br>Durham University: Dr Carlton Shepherd</p><a href="../index.html">All practicals</a></div></footer>
-</body>
-</html>
-=======
 
 <html lang="en-GB"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><meta content="light" name="color-scheme"/><meta content="Week 2 Python practical: one-time pads, ChaCha20, AES modes, authenticated encryption and RSA digital signatures." name="description"/><title>Week 2: Applied Cryptography | Durham University</title><link href="../assets/style.css" rel="stylesheet"/><link href="assets/crypto.css" rel="stylesheet"/><script defer="" src="assets/practical.js"></script></head><body>
 <a class="skip-link" href="#main">Skip to content</a><header class="masthead"><div class="wrap"><div class="brand">COMP2211 Security<small>Week 2 practical</small></div><nav aria-label="Main navigation"><a href="../index.html">All practicals</a><a href="#requirements">Start</a><a href="#reference">Reference</a></nav><img alt="Durham University" class="durham-logo" src="../assets/durham-logo.svg" width="162"/></div></header>
@@ -165,4 +143,3 @@ else:
 <p class="reading-link">References: <a href="https://www.pycryptodome.org/src/signature/pkcs1_pss">PyCryptodome's RSA-PSS API</a>, <a href="https://www.pycryptodome.org/src/public_key/rsa">RSA key generation</a> and <a href="https://www.rfc-editor.org/rfc/rfc8017#section-8.1">RSA-PSS specification</a>.</p>
 </section><section class="section" id="reference"><h2>Quick reference</h2><div class="table-scroll"><table><thead><tr><th scope="col">Construction used here</th><th scope="col">Parameters</th><th scope="col">What to remember</th></tr></thead><tbody><tr><td>Pad demonstration</td><td>One pad byte per message byte</td><td>Secret pad, used once; no integrity check</td></tr><tr><td>ChaCha20</td><td>32-byte key, 12-byte nonce</td><td>No repeated key/nonce pair; no padding or integrity check</td></tr><tr><td>AES-CBC</td><td>AES key; fresh unpredictable 16-byte IV</td><td>Whole blocks or padding required; no integrity check</td></tr><tr><td>ChaCha20-Poly1305</td><td>32-byte key, 12-byte nonce, 16-byte tag</td><td>Verify before use; never reuse a nonce with the key</td></tr><tr><td>RSA-PSS with SHA-256</td><td>3072-bit RSA key pair</td><td>Private key signs; public key verifies; no confidentiality</td></tr></tbody></table></div>
 <h3>When something goes wrong</h3><ul><li><code>ModuleNotFoundError: Crypto</code>: check that <code>pycryptodome</code> is installed in the interpreter used to run the script.</li><li>Incorrect AES key length: use bytes, not the hexadecimal characters used to display them. For example, 32 hex characters represent 16 bytes.</li><li>Input not aligned to a block boundary: check your input length and whether the example uses padding. Do not remove arbitrary trailing bytes to make it fit.</li><li><code>Padding is incorrect</code>: check the key, IV, file layout and padding convention. Do not assume that every wrong key or altered ciphertext will raise this error.</li><li>Wrong ChaCha20 output: check the key, nonce and stream position. Construct a fresh receiver for the start of a message.</li><li><code>UnicodeDecodeError</code>: compare or print hex for arbitrary bytes; only decode data that is meant to be text.</li></ul></section></div></div></main><footer><div class="wrap"><p>COMP2211 Security: Week 2 practical<br/>Durham University: Dr Carlton Shepherd</p><div class="footer-links"><a href="../index.html">All practicals</a><a href="#main">Back to top</a></div></div></footer><div aria-live="polite" class="sr-only" id="copy-status"></div></body></html>
->>>>>>> 3e2bc8c (Crypto practicals)
