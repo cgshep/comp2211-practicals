@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<<<<<<< HEAD
 <html lang="en-GB">
 <head>
 <meta charset="utf-8">
@@ -19,3 +20,149 @@
 <footer><div class="wrap"><p>COMP2211 Security<br>Durham University: Dr Carlton Shepherd</p><a href="../index.html">All practicals</a></div></footer>
 </body>
 </html>
+=======
+
+<html lang="en-GB"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><meta content="light" name="color-scheme"/><meta content="Week 2 Python practical: one-time pads, ChaCha20, AES modes, authenticated encryption and RSA digital signatures." name="description"/><title>Week 2: Applied Cryptography | Durham University</title><link href="../assets/style.css" rel="stylesheet"/><link href="assets/crypto.css" rel="stylesheet"/><script defer="" src="assets/practical.js"></script></head><body>
+<a class="skip-link" href="#main">Skip to content</a><header class="masthead"><div class="wrap"><div class="brand">COMP2211 Security<small>Week 2 practical</small></div><nav aria-label="Main navigation"><a href="../index.html">All practicals</a><a href="#requirements">Start</a><a href="#reference">Reference</a></nav><img alt="Durham University" class="durham-logo" src="../assets/durham-logo.svg" width="162"/></div></header>
+<main id="main"><section class="hero"><div class="wrap"><h1>Applied Cryptography</h1><p class="course" style="margin-top:18px">Dr Carlton Shepherd</p><p>This practical covers encryption and authentication in Python. You will write a one-time pad, use ChaCha20 and AES-CBC, and try two ways of checking a message: an authentication tag and an RSA signature.</p><div class="actions"><a class="button" href="#requirements">Start here</a><a class="button secondary" download="" href="week2-files.zip">Download practice files</a><button class="button secondary print-button js-only" id="print" type="button">Print / save PDF</button></div></div></section>
+<div class="wrap layout"><aside aria-label="Practical contents" class="toc"><h2>Contents</h2><a href="#requirements">Requirements</a><ol><li><a href="#part1">1. Make a one-time pad</a></li><li><a href="#part2">2. ChaCha20</a></li><li><a href="#part3">3. AES in CBC mode</a></li><li><a href="#part4">4. Authentication</a></li></ol><div class="extra"><a href="#reference">Quick reference</a><a href="../week1/index.html">Week 1: Python</a></div></aside><div class="content"><section class="section" id="requirements"><h2>Requirements</h2><ul><li><strong>PyCharm through AppsAnywhere</strong>, with Python 3.10 or later.</li><li>The <a download="" href="week2-files.zip">Week 2 practice files</a>, extracted into your project.</li><li><strong>PyCryptodome</strong>, installed as <code>pycryptodome</code> in your project interpreter. It is imported as <code>Crypto</code>. The supplied <code>requirements.txt</code> lists the dependency.</li><li>Week 1 skills: loops, conditions, bytes, hexadecimal, and reading and writing files.</li></ul>
+<p>Keep the scripts in the same directory as the <code>data</code> folder. Before starting, try <code>from Crypto.Cipher import AES, ChaCha20</code>. If this fails, check that PyCryptodome is installed in the interpreter selected in PyCharm.</p>
+<p>Work through Parts 1-4 during the two-hour session. The download contains the code shown below. You will complete the XOR function in Part 1 and use library functions for the remaining algorithms. If you need a reminder of Python byte operations, refer to <a href="../week1/index.html#part4">Week 1, Part 4</a>. Leave the optional CBC file exercise until you have finished the main tasks.</p>
+<p>The coursework will also require you to handle bytes, choose cipher parameters and examine recovered data. These exercises provide some of that background, but are not a complete guide to the assessed challenges.</p></section><section class="section" id="part1"><h2>1. Make a one-time pad</h2>
+<p>In Week 1 you applied the same XOR value to every byte. A <strong>one-time pad</strong> uses a separate random byte for each message byte.</p>
+<p>A one-time pad can provide <strong>information-theoretic security</strong>: its secrecy does not depend on an attacker having limited computing power. Claude Shannon formalised this property as <strong>perfect secrecy</strong> in his 1949 paper <em>Communication Theory of Secrecy Systems</em>. Seeing the ciphertext tells an attacker nothing more about the message contents than they knew beforehand, even if they can try every possible key.</p>
+<p>This requires a secret pad that is uniformly random, independent of the message, at least as long as the message and never reused. Every possible plaintext of the same length has a corresponding pad that would produce the observed ciphertext. Since these pads are equally likely, trying all of them cannot identify the original message. The ciphertext still reveals the message length, and the pad offers no protection against someone altering it.</p>
+<p>For this exercise, write the XOR function yourself and generate the pad with <code>secrets.token_bytes</code>, which uses the operating system's cryptographic random generator.</p>
+<p>For each byte position, encryption is <code>ciphertext = message XOR pad</code>. Applying the same pad again recovers the message because <code>x XOR k XOR k = x</code>.</p>
+<h3>Write the XOR function</h3><p>Open <code>byte_tools.py</code>. Keep the length check: the function expects one pad byte for each message byte.</p>
+<div class="codebox"><div class="codebar"><span>byte_tools.py</span><button aria-label="Copy byte_tools.py" class="copy js-only" type="button">Copy</button></div><pre tabindex="0"><code>def xor_bytes(left, right):
+    if len(left) != len(right):
+        raise ValueError("The byte sequences must have equal lengths")
+
+    # Replace this line with your XOR loop and return the result as bytes.
+    raise NotImplementedError("Complete xor_bytes first")</code></pre></div><p>The <code>def</code> statement defines a function. Its indented body runs when you call it, and <code>return</code> passes the result back to the caller. The script <code>otp.py</code> imports your function from <code>byte_tools.py</code>, so keep both files in the same directory.</p><div class="codebox"><div class="codebar"><span>otp.py</span><button aria-label="Copy otp.py" class="copy js-only" type="button">Copy</button></div><pre tabindex="0"><code>from secrets import token_bytes
+from byte_tools import xor_bytes
+
+message = input("Message: ").encode("utf-8")
+pad = token_bytes(len(message))
+ciphertext = xor_bytes(message, pad)
+recovered = xor_bytes(ciphertext, pad)
+
+print("Message bytes:", len(message))
+print("Pad bytes:", len(pad))
+print("Ciphertext (hex):", ciphertext.hex())
+print("Recovered:", recovered.decode("utf-8"))
+print("Same bytes:", recovered == message)</code></pre></div>
+<div class="task"><h3>Exercise: complete and test the pad</h3><ul><li>Complete <code>xor_bytes</code>: XOR each pair of bytes, collect the results and return them as <code>bytes</code>. Remove the <code>NotImplementedError</code> line.</li><li>Run <code>otp.py</code> with a short message. Check that the recovered message matches and <code>Same bytes</code> prints <code>True</code>. Explain why applying the same pad twice recovers the original bytes.</li></ul></div>
+<details><summary>Hint: writing the loop</summary><p>Start with <code>result = []</code>. Use <code>for i in range(len(left)):</code> and append one XOR result per pass. Place <code>return bytes(result)</code> after the loop.</p></details>
+<p>The message, pad and ciphertext should have the same byte length. The hexadecimal output is twice as long because each byte is written as two hex characters.</p>
+<p>The difficulty with a one-time pad is distributing the key. To encrypt a 1 MB file, both parties need 1 MB of shared secret pad, which they must never use again. Stream ciphers avoid this practical problem by generating a long keystream from a short key. Their security is computational: recovering the message without the key should take an infeasible amount of work.</p>
+<p class="reading-link">References: <a href="https://pages.cs.wisc.edu/~rist/642-spring-2014/shannon-secrecy.pdf">Shannon's 1949 paper (PDF, Section 10)</a> and <a href="https://docs.python.org/3/library/secrets.html">Python's secrets module</a>.</p>
+</section><section class="section" id="part2"><h2>2. ChaCha20</h2><p>Daniel J. Bernstein introduced <strong>ChaCha20</strong> in <strong>2008</strong> as a development of Salsa20. It is a symmetric stream cipher: a key, nonce and block counter determine a keystream, which is XORed with the message. Decryption uses the same keystream. The <code>20</code> in its name refers to the number of mixing rounds.</p>
+<p>ChaCha20 is designed to run quickly in software, including on processors without dedicated AES hardware. It uses addition, rotation and XOR, and can encrypt messages of any byte length without padding. Unlike a one-time pad, its security depends on the difficulty of predicting the keystream without the key.</p>
+<p>ChaCha20 is usually combined with Poly1305 to detect alterations as well as encrypt data. <strong>ChaCha20-Poly1305</strong> is used by the <strong>WireGuard VPN</strong> and is one of the options in TLS 1.3 for protecting HTTPS connections. We will use ChaCha20 on its own first, then add authentication in Part 4.</p>
+<p>The version used here takes a <strong>32-byte key</strong> and a <strong>12-byte nonce</strong>. The nonce is public, but must be different for every message encrypted with the same key. It selects a different keystream; the counter then advances through successive 64-byte blocks of that stream.</p>
+<figure class="crypto-figure"><img alt="A secret key, public nonce and block counter feed ChaCha20. Its keystream is XORed with plaintext to encrypt, or with ciphertext to decrypt. Both ends use the same key, nonce and counter position." height="470" src="assets/chacha-flow.svg" width="900"/><figcaption>Encryption and decryption use XOR with matching keystream bytes. The counter advances as the message is processed.</figcaption></figure>
+<h3>How the keystream is made</h3><p>ChaCha20 works on sixteen 32-bit words. It repeatedly combines them using <strong>addition, rotation and XOR (ARX)</strong>. Addition wraps modulo 2<sup>32</sup>; rotation moves bits around a word without discarding them. A quarter-round mixes four words, and twenty rounds alternate between columns and diagonals of the state. Finally, the initial state is added back and the result is written as 64 keystream bytes.</p><details><summary>The 16-word state</summary><div class="table-scroll"><table><caption>IETF ChaCha20 state before mixing</caption><thead><tr><th scope="col">Word positions</th><th scope="col">Contents</th></tr></thead><tbody><tr><td>0-3</td><td>Four fixed constants</td></tr><tr><td>4-11</td><td>The 256-bit key</td></tr><tr><td>12</td><td>The 32-bit block counter</td></tr><tr><td>13-15</td><td>The 96-bit nonce</td></tr></tbody></table></div><p>You do not need to implement these rounds. PyCryptodome handles the internal state and keystream generation.</p></details>
+<h3>Encrypt and decrypt a message</h3><p>Run <code>chacha.py</code>. The nonce length is specified explicitly because PyCryptodome also supports an 8-byte variant.</p><div class="codebox"><div class="codebar"><span>chacha.py</span><button aria-label="Copy chacha.py" class="copy js-only" type="button">Copy</button></div><pre tabindex="0"><code>from secrets import token_bytes
+from Crypto.Cipher import ChaCha20
+
+key = token_bytes(32)
+nonce = token_bytes(12)
+message = b"Room 204 is booked for 10:00."
+
+sender = ChaCha20.new(key=key, nonce=nonce)
+ciphertext = sender.encrypt(message)
+print("Nonce (hex):", nonce.hex())
+print("Ciphertext (hex):", ciphertext.hex())
+print("Lengths:", len(message), len(ciphertext))
+
+# Add your decryption and comparisons below.</code></pre></div><div class="task"><h3>Exercise: decrypt and compare</h3><ul><li>Add a receiver using <code>ChaCha20.new(key=key, nonce=nonce)</code> and its <code>decrypt(ciphertext)</code> method. Print the recovered message and check that its bytes match <code>message</code>.</li><li>Encrypt the same message again with the original key and nonce, using a fresh cipher object. Then repeat with a new nonce and compare the ciphertexts. What difference does the nonce make? Reusing it here demonstrates the behaviour; a new message must use a new nonce.</li></ul></div><details><summary>Expected observations</summary><p>Decryption with the matching key and nonce recovers the original message. Repeating the same key, nonce and message produces the same ciphertext; changing the nonce should change it. The nonce selects a different keystream under the same key.</p></details>
+<p>A cipher object keeps its position in the keystream. Calling it again continues from that position, whereas a new object starts at the beginning. This is why the receiver needs a fresh object with the original key and nonce. Do not use that combination to encrypt another message.</p>
+<p>We generate random nonces for these short experiments. In a deployed system, nonce values must not repeat under the same key, including after a restart or when several senders share a key. The library does not keep track of this for you.</p>
+<p class="reading-link">References: <a href="https://www.rfc-editor.org/rfc/rfc8439#section-2">RFC 8439, ChaCha20</a>, <a href="https://www.pycryptodome.org/src/cipher/chacha20">PyCryptodome's ChaCha20 API</a>, <a href="https://www.rfc-editor.org/rfc/rfc8446#appendix-B.4">TLS 1.3 cipher suites</a> and <a href="https://www.wireguard.com/protocol/">WireGuard's cryptography</a>.</p></section><section class="section" id="part3"><h2>3. AES in CBC mode</h2><p><strong>AES (Advanced Encryption Standard)</strong> is based on Rijndael, the block cipher designed by Joan Daemen and Vincent Rijmen. They submitted it to NIST's public competition in <strong>1998</strong>; it was selected in 2000 and standardised as AES in <strong>2001</strong>.</p><p>AES encrypts <strong>16-byte (128-bit) blocks</strong> with a key of 16, 24 or 32 bytes. These key lengths give AES-128, AES-192 and AES-256; the block size remains 128 bits in each case. Internally, the cipher substitutes and rearranges bytes, mixes them and combines them with key material over 10, 12 or 14 rounds, respectively.</p><p>You will encounter AES in several forms. <strong>AES-GCM</strong> provides authenticated encryption in TLS 1.3, while Windows BitLocker uses <strong>XTS-AES</strong> for drive encryption. GCM and XTS are <strong>modes of operation</strong>: they specify how to use the AES block cipher for larger amounts of data. In this practical, we use CBC.</p><p><strong>CBC (Cipher Block Chaining)</strong> XORs each plaintext block with the previous ciphertext block before applying AES. The first block uses an initialisation vector (IV). Encryption of each block therefore depends on what came before it.</p>
+<figure class="crypto-figure"><img alt="CBC XORs the first plaintext block with an IV and each later plaintext block with the previous ciphertext block before AES encryption." height="335" src="assets/aes-cbc.svg" width="900"/><figcaption>CBC chains successive blocks together. Each AES operation uses the same key.</figcaption></figure>
+<p>AES-CBC needs a fresh, unpredictable 16-byte IV for each encryption under a key. The IV can be stored with the ciphertext because it need not be secret. To decrypt a block, the receiver first applies AES decryption, then XORs the result with the previous ciphertext block. For the first block, it uses the IV instead.</p>
+<p>Run <code>aes_cbc.py</code>. It reads six 16-byte records from <code>data/records.bin</code> and encrypts and decrypts them. This file already fills complete blocks, so no padding is needed.</p><div class="codebox"><div class="codebar"><span>aes_cbc.py</span><button aria-label="Copy aes_cbc.py" class="copy js-only" type="button">Copy</button></div><pre tabindex="0"><code>from pathlib import Path
+from secrets import token_bytes
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+
+key = token_bytes(16)
+iv = token_bytes(16)
+message = Path("data/records.bin").read_bytes()
+ciphertext = AES.new(key, AES.MODE_CBC, iv=iv).encrypt(message)
+
+for offset in range(0, len(ciphertext), 16):
+    print(offset // 16, ciphertext[offset:offset + 16].hex())
+
+receiver = AES.new(key, AES.MODE_CBC, iv=iv)
+recovered = receiver.decrypt(ciphertext)
+print("Same bytes:", recovered == message)
+
+# Optional: add the file experiment from the sheet.</code></pre></div><div class="task"><h3>Exercise: encrypt and decrypt with CBC</h3><ul><li>Replace the file input in <code>aes_cbc.py</code> with a message of your own. Keep its length a multiple of 16 bytes for now. Encrypt it, then print the recovered message after decryption.</li><li>Look at the receiver's arguments. Why does it need the same IV as the sender, and why can the IV be stored alongside the ciphertext while the key must stay secret?</li><li>What do you think happens if the IV is repeated or predictable?</li></ul></div>
+<details><summary>Expected observations</summary><p>Decryption with the original key and IV recovers your message. The IV is needed to recover the first block; knowing it does not supply the secret AES key.</p></details><h3>Padding</h3><p>Most files will not be an exact multiple of 16 bytes. <strong>PKCS#7 padding</strong> fills the last block: if five bytes are needed, it adds five bytes whose value is 5. If the input already fills a block, it adds sixteen bytes of value <code>0x10</code>. This allows the receiver to recognise and remove the padding.</p>
+<details><summary>Optional: encrypt and recover a text file</summary><p>Add the following code to <code>aes_cbc.py</code>. It saves a 16-byte IV followed by the ciphertext. The <code>+</code> operator joins the two byte sequences.</p><div class="codebox"><div class="codebar"><span>append to aes_cbc.py</span><button aria-label="Copy append to aes_cbc.py" class="copy js-only" type="button">Copy</button></div><pre tabindex="0"><code>note = Path("data/note.txt").read_bytes()
+file_iv = token_bytes(16)
+padded = pad(note, AES.block_size)
+encrypted = AES.new(key, AES.MODE_CBC, iv=file_iv).encrypt(padded)
+Path("note.cbc").write_bytes(file_iv + encrypted)
+
+# Read note.cbc back and recover the original file.</code></pre></div><div class="task"><h3>Exercise: recover the saved file</h3><ul><li>Read <code>note.cbc</code>. Take the first 16 bytes as the IV and the remainder as ciphertext. Decrypt using the original key and saved IV, then call <code>unpad(result, AES.block_size)</code>.</li><li>Write the result to <code>note-recovered.txt</code> and compare its bytes with <code>data/note.txt</code>.</li></ul></div><details><summary>Hint: recovering the file</summary><p>Use <code>stored[:16]</code> for the IV and <code>stored[16:]</code> for the ciphertext. Decrypt before removing the padding. The key is still available in the <code>key</code> variable during this run. Restarting the script generates a new key, so keep the original if you want to decrypt the file later.</p></details><p>The recovered file should match <code>data/note.txt</code> byte for byte.</p></details>
+<div class="callout"><p><strong>CBC does not detect tampering.</strong> Altered ciphertext can still decrypt to readable text with valid padding. To check that data is authentic, we need an additional mechanism, which is the subject of the next section.</p></div>
+<p class="reading-link">References: <a href="https://csrc.nist.gov/pubs/fips/197/final">AES specification</a>, <a href="https://csrc.nist.gov/Projects/cryptographic-standards-and-guidelines/Archived-Crypto-Projects/AES-Development">AES development history</a>, <a href="https://www.rfc-editor.org/rfc/rfc8446#appendix-B.4">TLS 1.3 cipher suites</a>, <a href="https://learn.microsoft.com/en-us/autopilot/bitlocker">BitLocker encryption</a>, <a href="https://www.pycryptodome.org/src/cipher/classic#cbc-mode">CBC API</a> and <a href="https://www.pycryptodome.org/src/util/util#crypto-util-padding-module">padding functions</a>.</p></section><section class="section" id="part4"><h2>4. Authentication</h2><p>So far, we have used encryption to keep messages confidential. Now we will check whether a message has been altered and whether it came from someone holding the expected key. First we will use a shared secret, then an RSA key pair.</p><h3 id="symmetric-authentication">Symmetric authentication</h3><p><strong>ChaCha20-Poly1305</strong> produces an authentication tag as well as ciphertext. The receiver uses the shared key to check this tag before accepting the plaintext. As with ChaCha20, each message needs a different nonce under the same key.</p>
+<p>Run <code>authenticated.py</code>. The call to <code>encrypt_and_digest</code> returns the ciphertext and tag. If verification fails, <code>decrypt_and_verify</code> raises <code>ValueError</code> and the <code>except</code> branch prints a rejection. The <code>else</code> branch runs only when verification succeeds.</p><div class="codebox"><div class="codebar"><span>authenticated.py</span><button aria-label="Copy authenticated.py" class="copy js-only" type="button">Copy</button></div><pre tabindex="0"><code>from secrets import token_bytes
+from Crypto.Cipher import ChaCha20_Poly1305
+
+key = token_bytes(32)
+nonce = token_bytes(12)
+message = b"Room 204 is booked for 10:00."
+
+sender = ChaCha20_Poly1305.new(key=key, nonce=nonce)
+ciphertext, tag = sender.encrypt_and_digest(message)
+
+received_ciphertext = ciphertext
+received_tag = tag
+receiver = ChaCha20_Poly1305.new(key=key, nonce=nonce)
+try:
+    recovered = receiver.decrypt_and_verify(received_ciphertext, received_tag)
+except ValueError:
+    print("Rejected: authentication failed")
+else:
+    print("Accepted:", recovered.decode("utf-8"))</code></pre></div><div class="task"><h3>Exercise: reject altered data</h3><ul><li>Run <code>authenticated.py</code> and confirm that the message is accepted. Then replace <code>received_ciphertext = ciphertext</code> with <code>received_ciphertext = bytes([ciphertext[0] ^ 1]) + ciphertext[1:]</code> and rerun. This changes one bit while leaving the original tag in place.</li><li>Explain what the receiver now checks that the earlier examples did not. Why would a plain SHA-256 hash sent alongside the ciphertext fail to provide the same protection against someone who can replace both?</li></ul></div><details><summary>What to check</summary><p>The altered message should print <code>Rejected: authentication failed</code>, without displaying any plaintext. Someone who changes the message can calculate a new public hash, but needs the secret key to produce a valid authentication tag.</p></details>
+<p class="reading-link">Reference: <a href="https://www.pycryptodome.org/src/cipher/chacha20_poly1305">ChaCha20-Poly1305 API</a>.</p>
+<h3 id="public-key-authentication">Public-key authentication with RSA</h3>
+<p>With a shared secret, either party can create a valid tag. <strong>Digital signatures</strong> allow someone to verify a message without giving them the key needed to sign it. The signer keeps a <strong>private key</strong>; the verifier uses the matching <strong>public key</strong>.</p>
+<p>We will use <strong>RSA-PSS with SHA-256</strong>. The signing operation takes a SHA-256 digest of the message and uses the private key to produce a signature. The receiver hashes the message they received and checks the signature with the public key. Both operations are provided by PyCryptodome.</p>
+<p>A signature does not hide the message. It also only identifies the signer if the receiver knows whose public key they have, perhaps through a checked certificate or a fingerprint verified separately. If an attacker can replace the public key as well as the message, they can substitute a message signed with their own key.</p>
+<h4>Sign a message and verify it</h4>
+<p>Run <code>rsa_signatures.py</code>. It generates a 3072-bit RSA key pair, which may take a moment, then signs the message with the private key. Verification uses only the public key. The <code>verify</code> method raises <code>ValueError</code> if the signature is invalid; otherwise it returns without an error. It does not return <code>True</code>.</p>
+<div class="codebox"><div class="codebar"><span>rsa_signatures.py</span><button aria-label="Copy rsa_signatures.py" class="copy js-only" type="button">Copy</button></div><pre tabindex="0"><code>from Crypto.PublicKey import RSA
+from Crypto.Hash import SHA256
+from Crypto.Signature import pss
+
+# The signer keeps the private key; the receiver only needs the public key.
+private_key = RSA.generate(3072)
+public_key = private_key.public_key()
+message = b"Room 204 is booked for 10:00."
+
+signature = pss.new(private_key).sign(SHA256.new(message))
+print("Signature bytes:", len(signature))
+
+# Change this received copy for the alteration experiment.
+received_message = message
+try:
+    pss.new(public_key).verify(SHA256.new(received_message), signature)
+except ValueError:
+    print("Rejected: invalid signature")
+else:
+    print("Accepted: valid signature")</code></pre></div>
+<div class="task"><h3>Exercise: sign and verify</h3><ul>
+<li>Run the script and check that the signature is accepted. Find the signing and verification calls. Why is it safe to give the verifier the public key?</li>
+<li>Change <code>received_message = message</code> to <code>received_message = b"Room 204 is booked for 11:00."</code> and rerun. Leave the original <code>message</code> and signing line unchanged. Why does verification fail?</li>
+</ul></div>
+<details><summary>What to check</summary><p>The original message should print <code>Accepted: valid signature</code>. The altered message should print <code>Rejected: invalid signature</code>: the signature was created for the original bytes.</p></details>
+<p class="reading-link">References: <a href="https://www.pycryptodome.org/src/signature/pkcs1_pss">PyCryptodome's RSA-PSS API</a>, <a href="https://www.pycryptodome.org/src/public_key/rsa">RSA key generation</a> and <a href="https://www.rfc-editor.org/rfc/rfc8017#section-8.1">RSA-PSS specification</a>.</p>
+</section><section class="section" id="reference"><h2>Quick reference</h2><div class="table-scroll"><table><thead><tr><th scope="col">Construction used here</th><th scope="col">Parameters</th><th scope="col">What to remember</th></tr></thead><tbody><tr><td>Pad demonstration</td><td>One pad byte per message byte</td><td>Secret pad, used once; no integrity check</td></tr><tr><td>ChaCha20</td><td>32-byte key, 12-byte nonce</td><td>No repeated key/nonce pair; no padding or integrity check</td></tr><tr><td>AES-CBC</td><td>AES key; fresh unpredictable 16-byte IV</td><td>Whole blocks or padding required; no integrity check</td></tr><tr><td>ChaCha20-Poly1305</td><td>32-byte key, 12-byte nonce, 16-byte tag</td><td>Verify before use; never reuse a nonce with the key</td></tr><tr><td>RSA-PSS with SHA-256</td><td>3072-bit RSA key pair</td><td>Private key signs; public key verifies; no confidentiality</td></tr></tbody></table></div>
+<h3>When something goes wrong</h3><ul><li><code>ModuleNotFoundError: Crypto</code>: check that <code>pycryptodome</code> is installed in the interpreter used to run the script.</li><li>Incorrect AES key length: use bytes, not the hexadecimal characters used to display them. For example, 32 hex characters represent 16 bytes.</li><li>Input not aligned to a block boundary: check your input length and whether the example uses padding. Do not remove arbitrary trailing bytes to make it fit.</li><li><code>Padding is incorrect</code>: check the key, IV, file layout and padding convention. Do not assume that every wrong key or altered ciphertext will raise this error.</li><li>Wrong ChaCha20 output: check the key, nonce and stream position. Construct a fresh receiver for the start of a message.</li><li><code>UnicodeDecodeError</code>: compare or print hex for arbitrary bytes; only decode data that is meant to be text.</li></ul></section></div></div></main><footer><div class="wrap"><p>COMP2211 Security: Week 2 practical<br/>Durham University: Dr Carlton Shepherd</p><div class="footer-links"><a href="../index.html">All practicals</a><a href="#main">Back to top</a></div></div></footer><div aria-live="polite" class="sr-only" id="copy-status"></div></body></html>
+>>>>>>> 3e2bc8c (Crypto practicals)

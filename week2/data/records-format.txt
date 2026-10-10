@@ -1,0 +1,8 @@
+Six consecutive 16-byte ASCII records, without separators or newline characters.
+Block positions start at zero. The records are:
+0: BOOKING:ROOM_204
+1: BOOKING:ROOM_204
+2: BOOKING:ROOM_105
+3: BOOKING:ROOM_204
+4: BOOKING:ROOM_105
+5: BOOKING:ROOM_105

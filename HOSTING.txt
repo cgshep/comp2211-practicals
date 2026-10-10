@@ -1,0 +1,110 @@
+COMP2211 SECURITY PRACTICALS
+Hosting notes
+
+Publish index.html, assets and week1 through week5 together in the published
+part of your GitHub Pages repository. Keep the directory structure unchanged.
+No build process or server application is required.
+
+If publishing from docs, place these files and directories inside docs.
+At https://USERNAME.github.io/REPOSITORY/, the index lists all five practicals.
+Week 1 is at https://USERNAME.github.io/REPOSITORY/week1/.
+All links are relative, so the site also works within a subdirectory.
+
+WEEKLY STRUCTURE
+1. (Re-)introducing Python
+2. Applied Cryptography
+3. System Security
+4. Authentication and Access Control
+5. Network Security
+
+Weeks 1 and 2 contain complete practicals. Weeks 3-5 have separate placeholder
+pages marked Forthcoming. Replace their content when the practicals are ready,
+and change their status on the main index. Each week links back to the index.
+
+FILES
+index.html                       Index of all five practicals
+assets/style.css                 Shared stylesheet
+assets/durham-logo.svg            Durham logo from the coursework pack
+assets/fonts/                    Noto Sans and its licence
+week1/index.html                 Week 1 student practical
+week1/assets/practical.js        Week 1 copy and print buttons
+week1/data/                      Week 1 practice data and crawler test pages
+week1/week1-files.zip             Student download containing the data files
+week2/index.html                 Applied Cryptography practical
+week2/assets/                    Diagrams, stylesheet and page controls
+week2/data/                      Independent teaching files
+week2/week2-files.zip             Student download with starter scripts
+week3/index.html                 System Security placeholder
+week4/index.html                 Authentication and Access Control placeholder
+week5/index.html                 Network Security placeholder
+
+Keep Week1_Demonstrator_Notes.txt out of the public hosting directory. It is
+supplied separately and contains worked solutions and teaching notes.
+
+PYCHARM AND PYTHON REQUIREMENTS
+Students use PyCharm through AppsAnywhere. The page begins with requirements,
+then asks students to set up their project and run a short script independently.
+Part 1 gives the required outcome without a step-by-step procedure. Check the
+campus setup before the session; it was not available for testing here.
+
+Parts 1-6 need only Python 3. Part 7 requires beautifulsoup4. The additional
+examples require cryptography and Pillow. Check or install packages through
+PyCharm's Python Packages window for the project's interpreter. These tools run
+on students' machines and do not change the GitHub Pages hosting requirements.
+
+WEB EXERCISE
+Part 6 requests https://en.wikipedia.org/wiki/Colleges_of_Durham_University and
+saves it as colleges.html. Part 7 extracts the names in the List of colleges
+table and writes colleges.txt. The script reads the saved file when rerun.
+
+Test the request and selectors from a teaching machine. The authoring environment
+returned HTTP 403 to urllib, so the code was tested with the simplified sample.
+The live article's table contents were checked through web retrieval. The page
+explains how to use browser-saved source or the sample if the request fails.
+
+The fallback is newly written teaching markup based on the table's names. It is
+not a complete saved copy of Wikipedia. The source is attributed in the file.
+
+PREVIEW
+Open index.html in a browser. For an HTTP preview, open a terminal in the
+extracted site directory, alongside index.html, and run one of:
+
+Linux or macOS: python3 -m http.server 8000 --bind 127.0.0.1
+Windows:       py -3 -m http.server 8000 --bind 127.0.0.1
+
+Open http://127.0.0.1:8000/. Stop the preview server with Ctrl+C.
+
+AFTER PUBLISHING
+Check the page and the practice download. Check the Python packages and the
+Wikipedia request from the teaching machines. The static page does not request
+Wikipedia's article itself; the student runs that Python script locally.
+
+EDITING
+Edit the root index.html for the weekly list, week1/index.html for the Python
+practical, assets/style.css for appearance and week1/assets/practical.js for
+its optional controls. If changing the sample data, also update the copies in
+week1-files.zip and any expected results that depend on them.
+
+The page has no external scripts or analytics. Fonts and assets are local.
+The instructions and expandable hints work without JavaScript. There is no
+progress tracker or browser storage. Printing opens hints and expected results.
+
+EXERCISE DATA
+Part 2 walks through input, lists, loops and conditions before a calculator task.
+Part 4 covers byte lists, AND/OR/XOR, reversible XOR and a list comprehension.
+Part 5 reads/writes text and binary files and checks recovery from disk.
+Part 7 extracts college names; its further exercise visits linked college
+pages automatically. data/crawl contains a local test with duplicate and onward
+links. These are teaching fixtures, not downloaded Wikipedia articles.
+Parts 1-6 are the two-hour session target, including time for questions and
+debugging. Part 7 is work to finish during the week. The crawler, encoding,
+encryption and image exercises are additional practice.
+
+WEEK 2
+Week 2 uses Python 3.10+ and pycryptodome (imported as Crypto). Test package
+installation in the AppsAnywhere project interpreter before teaching. The
+practice ZIP contains starter scripts and data, not staff solutions.
+
+Keep Week2_Demonstrator_Pack.zip separate from the public site. It contains
+worked solutions, timing guidance and the reference checks. The examples use
+new teaching data and do not reproduce coursework challenge formats or flags.
