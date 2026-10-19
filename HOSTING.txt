@@ -17,7 +17,7 @@ WEEKLY STRUCTURE
 4. Authentication and Access Control
 5. Network Security
 
-Weeks 1 and 2 contain complete practicals. Weeks 3-5 have separate placeholder
+Weeks 1-3 contain complete practicals. Weeks 4-5 have separate placeholder
 pages marked Forthcoming. Replace their content when the practicals are ready,
 and change their status on the main index. Each week links back to the index.
 
@@ -34,7 +34,8 @@ week2/index.html                 Applied Cryptography practical
 week2/assets/                    Diagrams, stylesheet and page controls
 week2/data/                      Independent teaching files
 week2/week2-files.zip             Student download with starter scripts
-week3/index.html                 System Security placeholder
+week3/index.html                 System Security practical
+week3/assets/                    Page stylesheet
 week4/index.html                 Authentication and Access Control placeholder
 week5/index.html                 Network Security placeholder
 
@@ -108,3 +109,13 @@ practice ZIP contains starter scripts and data, not staff solutions.
 Keep Week2_Demonstrator_Pack.zip separate from the public site. It contains
 worked solutions, timing guidance and the reference checks. The examples use
 new teaching data and do not reproduce coursework challenge formats or flags.
+
+WEEK 3
+Week 3 is a static two-hour practical based on the 2017 Equifax breach and
+CVE-2017-5638. It includes an SVG system diagram, starter tables, a sourced
+incident summary and written exercises. Students need a browser and notes.
+There is no student software, local server or JavaScript requirement.
+
+Keep Week3_Demonstrator_Pack.zip outside the public site. Its notes contain
+possible answers and source checks. Preserve the source links and the diagram's
+qualification that it is a logical teaching view, not an exact network topology.

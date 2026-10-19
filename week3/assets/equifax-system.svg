@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="700" viewBox="0 0 1120 700" role="img" aria-labelledby="title desc">
+<title id="title">Equifax dispute portal: simplified system diagram</title>
+<desc id="desc">Internet users send web requests to the dispute portal. The portal uses three associated databases. After compromising the portal, attackers reached a repository containing unencrypted credentials and used those credentials to query other databases. A separate monitoring function inspected network traffic, but an expired certificate prevented encrypted traffic inspection during the breach. This is a logical teaching diagram, not a network topology.</desc>
+<defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#572b68"/></marker><marker id="attack" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#9a3f28"/></marker></defs>
+<style>text{font-family:Arial,sans-serif;fill:#25232b;font-size:18px}.label{font-size:16px;fill:#514b59}.heading{font-size:21px;font-weight:bold}.box{fill:white;stroke:#776581;stroke-width:1.6}.normal{stroke:#572b68;stroke-width:2;fill:none;marker-end:url(#arrow)}.attack{stroke:#9a3f28;stroke-width:2;stroke-dasharray:7 5;fill:none;marker-end:url(#attack)}.observation{stroke:#176d70;stroke-width:2;stroke-dasharray:3 5;fill:none}</style>
+<rect width="1120" height="700" fill="#fff"/>
+<rect x="319" y="60" width="777" height="564" rx="6" fill="#f7f4f9" stroke="#c5b9cc"/>
+<text x="40" y="36" class="heading">Internet</text><text x="341" y="36" class="heading">Equifax systems shown in the reports</text>
+<rect class="box" x="35" y="155" width="219" height="115" rx="5"/>
+<text x="144" y="190" text-anchor="middle" class="heading">Internet users</text><text x="144" y="219" text-anchor="middle">Consumers and</text><text x="144" y="243" text-anchor="middle">potential attackers</text>
+<rect class="box" x="365" y="155" width="280" height="115" rx="5"/>
+<text x="505" y="190" text-anchor="middle" class="heading">Online dispute portal</text><text x="505" y="220" text-anchor="middle">Apache Struts handles</text><text x="505" y="245" text-anchor="middle">incoming web requests</text>
+<path class="normal" d="M254 213H365"/>
+<text x="308" y="167" text-anchor="middle" class="label">Web</text><text x="308" y="188" text-anchor="middle" class="label">requests</text>
+<circle cx="319" cy="213" r="15" fill="#572b68"/><text x="319" y="219" text-anchor="middle" style="fill:white;font-weight:bold;font-size:16px">1</text>
+<rect class="box" x="788" y="104" width="279" height="100" rx="5"/>
+<text x="927" y="140" text-anchor="middle" class="heading">Portal databases</text><text x="927" y="169" text-anchor="middle">Three associated databases</text><text x="927" y="192" text-anchor="middle" class="label">Consumer information</text>
+<path class="normal" d="M645 187H710V154H788"/>
+<text x="707" y="132" text-anchor="middle" class="label">Queries</text>
+<circle cx="748" cy="154" r="15" fill="#572b68"/><text x="748" y="160" text-anchor="middle" style="fill:white;font-weight:bold;font-size:16px">2</text>
+<rect class="box" x="788" y="293" width="279" height="100" rx="5"/>
+<text x="927" y="327" text-anchor="middle" class="heading">Accessible repository</text><text x="927" y="356" text-anchor="middle">Unencrypted database</text><text x="927" y="380" text-anchor="middle">usernames and passwords</text>
+<path class="attack" d="M645 244H710V343H788"/>
+<text x="561" y="312" text-anchor="middle" class="label">Reached after</text><text x="561" y="334" text-anchor="middle" class="label">portal compromise</text>
+<rect class="box" x="788" y="494" width="279" height="100" rx="5"/>
+<text x="927" y="530" text-anchor="middle" class="heading">Other databases</text><text x="927" y="559" text-anchor="middle">48 unrelated databases</text><text x="927" y="583" text-anchor="middle" class="label">Beyond the portal's normal scope</text>
+<path class="attack" d="M927 393V494"/>
+<rect x="802" y="418" width="250" height="47" fill="#f7f4f9"/>
+<text x="927" y="436" text-anchor="middle" class="label">Recovered credentials used</text><text x="927" y="458" text-anchor="middle" class="label">to query more databases</text>
+<rect x="365" y="449" width="280" height="145" rx="5" fill="#f0f7f5" stroke="#176d70" stroke-width="1.6"/>
+<text x="505" y="481" text-anchor="middle" class="heading">Traffic inspection</text><text x="505" y="510" text-anchor="middle">An expired certificate</text><text x="505" y="534" text-anchor="middle">prevented inspection of</text><text x="505" y="558" text-anchor="middle">encrypted traffic</text><text x="505" y="582" text-anchor="middle" class="label">Traffic-monitoring function</text>
+<path class="observation" d="M398 449V380H283V213"/>
+<text x="277" y="413" text-anchor="end" class="label">Observes traffic</text>
+<path d="M38 655H99" class="normal"/><text x="110" y="661" class="label">Normal service access</text>
+<path d="M350 655H411" class="attack"/><text x="422" y="661" class="label">Access used in the breach</text>
+<text x="1090" y="688" text-anchor="end" class="label">Based on GAO-18-559, pp. 11-16. Logical relationships, not physical topology.</text>
+</svg>

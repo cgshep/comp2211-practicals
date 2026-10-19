@@ -1,0 +1,6 @@
+.task ul{margin:0;list-style-type:disc}.goal{font-size:15px;color:var(--muted)}
+.case-note{border-left:3px solid var(--purple);padding:14px 18px;background:#f6f3f8;margin:20px 0}.case-note h3{margin-top:0}.case-note p:last-child{margin-bottom:0}
+.system-figure{margin:24px 0}.figure-scroll{overflow-x:auto;background:white;border:1px solid var(--line)}.system-figure img{display:block;width:100%;height:auto;min-width:800px}.system-figure figcaption{font-size:14px;color:var(--muted);margin-top:10px}
+.to-complete{color:var(--muted);font-style:italic}.asset-table td{min-width:115px}.source{white-space:nowrap;font-size:14px}.sources li{margin-bottom:14px}
+.table-scroll:focus-visible,.figure-scroll:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+@media print{.system-figure{break-inside:avoid}.system-figure img{min-width:0}.figure-scroll,.table-scroll{overflow:visible}table{font-size:9pt}th,td{padding:6px}tr{break-inside:avoid}.asset-table td{min-width:0}.case-note{break-inside:avoid}}

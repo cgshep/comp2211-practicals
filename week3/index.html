@@ -4,18 +4,114 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>Week 3: System Security | COMP2211 Security | Durham University</title>
+<meta name="description" content="System Security practical based on the 2017 Equifax breach and CVE-2017-5638: system diagram, assets, threat analysis and controls.">
+<title>Week 3: System Security | Durham University</title>
 <link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="assets/system.css">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
 <header class="masthead"><div class="wrap">
 <div class="brand">COMP2211 Security<small>Week 3 practical</small></div>
-<nav aria-label="Main navigation"><a href="../index.html">All practicals</a></nav>
+<nav aria-label="Main navigation"><a href="../index.html">All practicals</a><a href="#requirements">Start</a><a href="#reference">Reference</a></nav>
 <img class="durham-logo" src="../assets/durham-logo.svg" width="162" alt="Durham University">
 </div></header>
-<main id="main"><section class="hero"><div class="wrap"><p class="course">Week 3</p><h1>System Security</h1><p class="course" style="margin-top:18px">Dr Carlton Shepherd</p></div></section>
-<section class="wrap week-notice" aria-labelledby="forthcoming"><h2 id="forthcoming">Forthcoming</h2><p>The exercises and practice files for this week will be added here.</p></section></main>
-<footer><div class="wrap"><p>COMP2211 Security<br>Durham University: Dr Carlton Shepherd</p><a href="../index.html">All practicals</a></div></footer>
-</body>
-</html>
+<main id="main">
+<section class="hero"><div class="wrap"><h1>System Security</h1>
+<p class="course" style="margin-top:18px">Dr Carlton Shepherd</p>
+<p>This practical examines the 2017 Equifax breach. A known software vulnerability provided an entry point, but the scale of the incident also depended on patch management, database access and monitoring. You will use the published findings to explain how these failures combined and where the attack could have been stopped.</p>
+</div></section>
+<div class="wrap layout"><aside class="toc" aria-label="Practical contents"><h2>Contents</h2><a href="#requirements">Requirements</a><ol>
+<li><a href="#part1">1. System and assets</a></li><li><a href="#part2">2. Understand the CVE</a></li><li><a href="#part3">3. Reconstruct the attack</a></li><li><a href="#part4">4. Recommend controls</a></li>
+</ol><div class="extra"><a href="#further-research">Further Research</a><a href="#reference">Sources</a></div></aside><div class="content">
+<section class="section" id="requirements"><h2>Requirements</h2>
+<ul><li>A browser and your System Security lecture notes.</li><li>Paper or a document for short answers and diagrams.</li></ul>
+<p>There is no software to install or run. The relevant case findings are summarised below, with links to the original sources. Read the short Apache advisory in Part 2; you do not need to read the full incident reports during the class.</p>
+<p>Work individually or in pairs. Allow five minutes to get started, 25 minutes for Part 1, 20 for Part 2, 30 for Part 3 and 35 for Part 4. Use the final five minutes to choose a case for Further Research.</p>
+</section>
+<section class="section" id="part1"><h2>1. System and assets</h2><p class="goal">About 25 minutes</p>
+<h3>The incident</h3>
+<p>Equifax is a credit reporting company. Its online dispute portal allowed people to challenge inaccurate information in their credit reports and upload supporting documents. A compromise therefore threatened information used in decisions about real people's finances. The FTC's 2019 account reports the theft of approximately 147 million names and dates of birth, alongside other personal information. <a class="source" href="#s1">[1]</a></p>
+<p>The diagram shows the components relevant to this practical. It is a simplified logical view drawn from the published investigation, not Equifax's actual network layout. Solid lines show ordinary service access; dashed lines show access used after the portal was compromised. Response paths are omitted. <a class="source" href="#s2">[2, pp. 11-16]</a></p>
+<figure class="system-figure"><div class="figure-scroll" tabindex="0" role="region" aria-label="System diagram"><img src="assets/equifax-system.svg" width="1120" height="700" alt="Internet users send requests to the Equifax dispute portal, which uses three associated databases. After compromising the portal, attackers reached a repository containing unencrypted database credentials and used them to access 48 unrelated databases. Traffic inspection failed to inspect encrypted traffic because a certificate had expired. Points 1 and 2 mark the Internet-to-application and application-to-database transitions."></div><figcaption>Figure 1. System components and reported access relationships. Points 1 and 2 are used in the exercise. <a href="assets/equifax-system.svg" target="_blank" rel="noopener">Open the diagram at full size</a>.</figcaption></figure>
+<h3>Start with the assets</h3>
+<p>An asset is something whose loss, disclosure, alteration or unavailability would matter. A database server is a component; the personal information it holds is an asset. Components and services can also be assets when their correct operation matters. Avoid using "security" as the property: say what must remain confidential, accurate or available, and to whom.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Starting asset table"><table class="asset-table"><caption>Copy and complete this table. The first row is an example.</caption><thead><tr><th scope="col">Asset</th><th scope="col">Who relies on it?</th><th scope="col">Required property</th><th scope="col">Consequence of failure</th></tr></thead><tbody>
+<tr><td>Consumer personal information</td><td>People whose records Equifax holds</td><td>Confidentiality: only authorised parties can retrieve it</td><td>Exposure can enable identity theft and cause loss of privacy</td></tr>
+<tr><td>Database credentials</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td></tr>
+<tr><td>Dispute portal service</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td></tr>
+<tr><td>Application code and configuration</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td></tr>
+<tr><td>Your choice of another asset</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td></tr>
+</tbody></table></div>
+<div class="task"><h3>Exercise: assets, trust and access</h3><ul>
+<li>Complete the table. For one asset, explain why more than one security property matters.</li>
+<li>At points 1 and 2 in the diagram, identify the subject making a request, the resource it wants and the decision that should be enforced. Explain why a request originating inside the organisation is not automatically trustworthy.</li>
+<li>Take the goal "consumer records are disclosed only to authorised parties". Identify three components or mechanisms you must rely on to enforce it. Give one assumption about the system that the reported breach shows was unsafe.</li>
+</ul></div>
+<p>Use the lecture's reference-monitor idea when considering point 2: every relevant access needs a check, and a compromised application should not acquire unrestricted access to unrelated records. The diagram's outer box is an organisational boundary, not evidence that everything inside it was properly isolated.</p>
+</section>
+<section class="section" id="part2"><h2>2. Understand the CVE</h2><p class="goal">About 20 minutes</p>
+<p>The entry point was <strong>CVE-2017-5638</strong>, a vulnerability in Apache Struts 2, a framework used to build Java web applications. A CVE identifier names a particular disclosed vulnerability. It does not establish that every installation of that product is affected or that a particular system has been compromised.</p>
+<p>Read <a href="https://cwiki.apache.org/confluence/spaces/WW/pages/68717257/S2-045">Apache's S2-045 advisory</a>, especially its summary, affected software, problem and solution. It concerns the Jakarta multipart parser, which handles certain file-upload requests. A malicious <code>Content-Type</code> header could trigger remote code execution through its error handling. Remote code execution means that an attacker can cause code to run on another computer; the authority available to that code still matters. <a class="source" href="#s3">[3]</a></p>
+<div class="case-note"><h3>Advisory facts</h3><p>Apache lists Struts <strong>2.3.5-2.3.31</strong> and <strong>2.5-2.5.10</strong> as affected. Its historical fixes were <strong>2.3.32</strong> and <strong>2.5.10.1</strong>. These are the versions relevant to the 2017 advisory, not recommendations for deploying a system today. <a class="source" href="#s3">[3]</a></p></div>
+<div class="task"><h3>Exercise: from an advisory to a system</h3><ul>
+<li>Explain the fault in three or four sentences: what can the attacker supply, which component processes it, and what capability can the attacker gain? Relate this to point 1 in the diagram. You do not need to construct a malicious request.</li>
+<li>Using the advisory, compare versions <code>2.3.31</code>, <code>2.3.32</code> and <code>2.5.10</code>. Which are listed as affected by this CVE? What configuration detail would you also need to check? Explain why "fixed for this CVE" does not mean "secure against every attack". These version numbers are a reading exercise, not a claim about Equifax's exact installed version.</li>
+<li>Suppose you are the defender receiving this advisory. What inventory information would let you find affected applications? What evidence would establish that a particular deployed application had actually been updated? Would an email instructing its owner to patch be enough?</li>
+</ul></div>
+</section>
+<section class="section" id="part3"><h2>3. Reconstruct the attack</h2><p class="goal">About 30 minutes</p>
+<p>The table summarises findings from the GAO investigation and allegations recorded in the FTC's complaint. It is not a simulated access log. The sources differ in scope: GAO reports what it established from documents and interviews, while the complaint sets out the regulator's allegations. <a class="source" href="#s2">[2]</a> <a class="source" href="#s4">[4]</a></p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Incident evidence"><table><caption>Evidence to use in your answers</caption><thead><tr><th scope="col">Ref.</th><th scope="col">Reported event or finding</th><th scope="col">Source</th></tr></thead><tbody>
+<tr><td>E1</td><td>On 9 March 2017, Equifax circulated an instruction to patch affected Struts installations within 48 hours. The FTC alleged that the responsible portal employee was not included and completion was not verified.</td><td><a href="#s4">[4, paras. 15-16, 22A]</a></td></tr>
+<tr><td>E2</td><td>A scan around 15 March failed to identify the vulnerable portal. The FTC attributed this to inadequate coverage and configuration.</td><td><a href="#s4">[4, para. 17]</a></td></tr>
+<tr><td>E3</td><td>GAO describes scanning and command execution by unidentified individuals in March. It separately describes the data-theft intrusion beginning on 13 May.</td><td><a href="#s2">[2, p. 11]</a></td></tr>
+<tr><td>E4</td><td>After gaining command execution, attackers found unencrypted database credentials and widened their access beyond the three portal databases to 48 unrelated databases.</td><td><a href="#s2">[2, pp. 11-12]</a></td></tr>
+<tr><td>E5</td><td>Attackers queried consumer data and transferred it in small amounts using encrypted web traffic. An expired certificate had prevented the traffic-inspection tool from inspecting that encrypted traffic.</td><td><a href="#s2">[2, pp. 12-14]</a></td></tr>
+<tr><td>E6</td><td>Inspection resumed after the certificate was replaced on 29 July, and suspicious activity was detected. The portal was taken offline on 30 July.</td><td><a href="#s2">[2, pp. 13-14]</a></td></tr>
+</tbody></table></div>
+<p>For E5, distinguish the monitoring failure from the original vulnerability. The expired certificate affected traffic inspection; it did not cause the Struts parsing flaw. The reports do not justify assuming that the March and May intrusions involved the same people.</p>
+<div class="task"><h3>Exercise: explain how the breach developed</h3><ul>
+<li>Trace the attack through Figure 1, using E3-E5. Separate initial access, access to further systems and removal of data. What extra conditions were needed for command execution on the portal to become a much wider disclosure?</li>
+<li>Map the evidence to the relevant stages of the cyber kill chain. Mark any stage for which this material gives insufficient detail. Classify reading a public advisory and sending the March probing requests as passive or active collection relative to Equifax.</li>
+<li>Draw a small attack tree for "obtain consumer information from Equifax". Use an OR node to distinguish taking information from the portal databases from reaching unrelated databases. Expand the latter route with an AND node showing the necessary steps. Use the evidence above; label any extra assumption you introduce.</li>
+</ul></div>
+<p>An attack tree expresses which conditions are required. It does not show their timing. Keep the sequence in your incident account and the AND/OR relationships in the tree.</p>
+</section>
+<section class="section" id="part4"><h2>4. Recommend controls</h2><p class="goal">About 35 minutes</p>
+<p>Now review the system from the defender's perspective. Use the weaknesses in the evidence, rather than a general list of security products. Start with the table below; its first row illustrates the level of detail expected.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Control analysis"><table><caption>Connect each control to a failure and a check</caption><thead><tr><th scope="col">Failure</th><th scope="col">Proposed control</th><th scope="col">Evidence that it works</th><th scope="col">What it does not solve</th></tr></thead><tbody>
+<tr><td>E1-E2: a vulnerable application remained deployed</td><td>Assign an owner to each application and verify urgent updates against the deployed software</td><td>A deployment record and an independent check of the running application and dependency version</td><td>It does not remove credentials already stolen by an attacker</td></tr>
+<tr><td>E4: access spread to unrelated databases</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td></tr>
+<tr><td>E4: reusable credentials were exposed</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td></tr>
+<tr><td>E5: a monitoring dependency failed</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td></tr>
+</tbody></table></div>
+<div class="task"><h3>Exercise: prevention, detection and response</h3><ul>
+<li>Complete the control table. State whether each proposal prevents access, limits the consequences, detects activity or supports response. Explain which part of your attack tree it changes.</li>
+<li>Consider two decision points: receiving the advisory in March, and detecting the intrusion on 29 July. Recommend the first two actions at each point. Explain why patching alone would be insufficient once credentials might have been taken. What is the availability cost of taking the portal offline?</li>
+<li>Explain why HTTPS did not prevent this breach, and why encrypting a database would not necessarily stop an application that is already allowed to retrieve plaintext. Give one risk that remains after your proposed controls and identify who should decide whether to accept it.</li>
+</ul></div>
+<p>For defence in depth, consider how the controls fail. If both your patch check and your vulnerability scan rely on an incomplete inventory, they may miss the same application. For least privilege, specify which application identity should be unable to read which records. "Restrict access" is not yet a complete recommendation.</p>
+<p>For the coursework, apply the same standard to a remedy: identify the weakness, explain what your change prevents and state what remains possible.</p>
+</section>
+<section class="section" id="further-research"><h2>Further Research</h2>
+<p>Choose another documented breach involving a different CVE and apply the same analysis. Begin by choosing your case during the class; continue the research afterwards.</p>
+<p>The <a href="https://haveibeenpwned.com/PwnedWebsites">Have I Been Pwned breach directory</a> is one place to look. Not every breach involves a known software vulnerability, and an entry may not explain how the attackers gained access. Find a vendor advisory for the CVE and an incident report from the affected organisation, an investigator, a regulator or a security agency that connects it to the breach. If that connection has not been established, choose another case.</p>
+<p>For example, you could investigate the 2023 MOVEit Transfer attacks involving <strong>CVE-2023-34362</strong>. The <a href="https://content.govdelivery.com/accounts/USDHSCISA/bulletins/35ecb08">joint CISA and FBI advisory</a> describes the attacks and links to the vendor's guidance.</p>
+<ul>
+<li>Draw a simplified system diagram and complete an asset table using the headings in Part 1. Mark any details the sources do not establish.</li>
+<li>Explain the vulnerability, the affected component and the conditions needed to exploit it. Distinguish what the advisory says is possible from what investigators report happened.</li>
+<li>Reconstruct the attack sequence and draw an attack tree. Identify where the attacker crossed a trust boundary or gained additional access.</li>
+<li>Recommend three controls using the table in Part 4, including how each would be checked and what it would leave unresolved. What is the most significant similarity or difference compared with Equifax?</li>
+</ul>
+<p>Cite the sources supporting your account. Where the evidence runs out, say so.</p>
+</section>
+<section class="section" id="reference"><h2>Sources</h2><p>Page numbers below are the printed report page numbers. The PDF links open at the relevant PDF page where supported.</p><ol class="sources">
+<li id="s1"><a href="https://www.ftc.gov/business-guidance/blog/2019/07/575-million-equifax-settlement-illustrates-security-basics-your-business">Federal Trade Commission, security failures behind the Equifax settlement</a>, 22 July 2019. Useful overview of the service, impact and failures alleged by the regulator.</li>
+<li id="s2"><a href="https://www.gao.gov/assets/gao-18-559.pdf#page=15">US Government Accountability Office, GAO-18-559</a>, August 2018. Read printed pp. 11-16 for the intrusion, diagram and contributing failures. The diagram in this practical is a simplified redraw of the reported relationships.</li>
+<li id="s3"><a href="https://cwiki.apache.org/confluence/spaces/WW/pages/68717257/S2-045">Apache Struts advisory S2-045: CVE-2017-5638</a>, 2017. The primary technical source for the affected versions and historical fixes.</li>
+<li id="s4"><a href="https://www.ftc.gov/system/files/documents/cases/172_3203_equifax_complaint_7-22-19.pdf#page=6">FTC complaint against Equifax</a>, 22 July 2019. See paragraphs 15-22 for patch management, scanning, credentials and wider access.</li>
+</ol><p class="reading-link">For the tree notation: <a href="https://www.schneier.com/academic/archives/1999/12/attack_trees.html">Bruce Schneier, Attack Trees (1999)</a>.</p></section>
+</div></div></main>
+<footer><div class="wrap"><p>COMP2211 Security<br>Durham University: Dr Carlton Shepherd</p><div class="footer-links"><a href="../week2/index.html">Week 2: Applied Cryptography</a><a href="../index.html">All practicals</a></div></div></footer>
+</body></html>
