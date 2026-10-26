@@ -17,8 +17,8 @@ WEEKLY STRUCTURE
 4. Authentication and Access Control
 5. Network Security
 
-Weeks 1-3 contain complete practicals. Weeks 4-5 have separate placeholder
-pages marked Forthcoming. Replace their content when the practicals are ready,
+Weeks 1-4 contain complete practicals. Week 5 has a separate placeholder
+page marked Forthcoming. Replace their content when the practicals are ready,
 and change their status on the main index. Each week links back to the index.
 
 FILES
@@ -36,7 +36,8 @@ week2/data/                      Independent teaching files
 week2/week2-files.zip             Student download with starter scripts
 week3/index.html                 System Security practical
 week3/assets/                    Page stylesheet
-week4/index.html                 Authentication and Access Control placeholder
+week4/index.html                 Authentication and Access Control practical
+week4/assets/                    Diagram, stylesheet and local MathJax renderer
 week5/index.html                 Network Security placeholder
 
 Keep Week1_Demonstrator_Notes.txt out of the public hosting directory. It is
@@ -119,3 +120,19 @@ There is no student software, local server or JavaScript requirement.
 Keep Week3_Demonstrator_Pack.zip outside the public site. Its notes contain
 possible answers and source checks. Preserve the source links and the diagram's
 qualification that it is a logical teaching view, not an exact network topology.
+
+
+WEEK 4
+Week 4 has all code and practice data inline. There is no student starter ZIP.
+Students create entropy.py, dictionary_attack.py and app.py themselves. They
+install Flask, argon2-cffi and Flask-WTF in their project interpreter.
+
+The Flask application runs on the student's own machine at 127.0.0.1:5000.
+GitHub Pages hosts the instructions only; it does not run the Python program.
+Keep the generated users.json file out of the public website and repository.
+The guestbook uses member and moderator accounts. Messages reset on restart.
+Python and terminal listings are highlighted in the HTML and work offline.
+
+The formulas use the local MathJax renderer in week4/assets. Keep its licence.
+Week4_Demonstrator_Pack.zip is separate staff material with complete solutions.
+The older Week4_Python_Files.zip is not used by this revision.

@@ -1,21 +1,410 @@
 <!DOCTYPE html>
-<html lang="en-GB">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light">
+<html lang="en-GB"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light">
+<meta name="description" content="Week 4 practical: entropy, dictionary attacks and a Flask application with Argon2id authentication and access control.">
 <title>Week 4: Authentication and Access Control | COMP2211 Security | Durham University</title>
-<link rel="stylesheet" href="../assets/style.css">
-</head>
-<body>
+<link rel="stylesheet" href="../assets/style.css"><link rel="stylesheet" href="assets/auth.css">
+<script>
+window.MathJax = {
+  tex: {inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']]},
+  svg: {fontCache: 'local'}
+};
+</script>
+<script defer src="assets/tex-svg.js"></script>
+</head><body>
 <a class="skip-link" href="#main">Skip to content</a>
-<header class="masthead"><div class="wrap">
-<div class="brand">COMP2211 Security<small>Week 4 practical</small></div>
-<nav aria-label="Main navigation"><a href="../index.html">All practicals</a></nav>
-<img class="durham-logo" src="../assets/durham-logo.svg" width="162" alt="Durham University">
-</div></header>
-<main id="main"><section class="hero"><div class="wrap"><p class="course">Week 4</p><h1>Authentication and Access Control</h1><p class="course" style="margin-top:18px">Dr Carlton Shepherd</p></div></section>
-<section class="wrap week-notice" aria-labelledby="forthcoming"><h2 id="forthcoming">Forthcoming</h2><p>The exercises and practice files for this week will be added here.</p></section></main>
-<footer><div class="wrap"><p>COMP2211 Security<br>Durham University: Dr Carlton Shepherd</p><a href="../index.html">All practicals</a></div></footer>
-</body>
-</html>
+<header class="masthead"><div class="wrap"><div class="brand">COMP2211 Security<small>Week 4 practical</small></div>
+<nav aria-label="Main navigation"><a href="../index.html">All practicals</a><a href="#requirements">Start</a><a href="#reference">Sources</a></nav>
+<img class="durham-logo" src="../assets/durham-logo.svg" width="162" alt="Durham University"></div></header>
+<main id="main"><section class="hero"><div class="wrap"><h1>Authentication and Access Control</h1>
+<p class="course" style="margin-top:18px">Dr Carlton Shepherd</p>
+<p>This week you will build a guestbook with a login page and rules about who may delete a message. Before that, you will calculate the predictability of passwords and write a dictionary attack against a practice hash. You will use Argon2id to store passwords and check permissions when a user asks to change the guestbook.</p></div></section>
+<div class="wrap layout"><aside class="toc" aria-label="Practical contents"><h2>Contents</h2><a href="#requirements">Requirements</a><ol>
+<li><a href="#part1">1. Entropy and guessing</a></li><li><a href="#part2">2. Dictionary attacks</a></li><li><a href="#part3">3. Build a Flask application</a></li><li><a href="#part4">4. Review your application</a></li>
+</ol><div class="extra"><a href="#further-research">Further Research</a><a href="#reference">Sources</a></div></aside><div class="content">
+
+<section class="section" id="requirements"><h2>Requirements</h2>
+<ul><li>Python 3.10 or later, your usual editor and a browser.</li><li>The Python packages <code>Flask</code>, <code>argon2-cffi</code> and <code>Flask-WTF</code>.</li><li>Your lecture notes and somewhere to record short answers.</li></ul>
+<p>Create an empty project folder. All code and practice data are on this page; create your own Python files as you work. Install the packages through your editor or run this command using the project's Python interpreter:</p>
+<div class="codebox"><div class="codebar"><span>Install the packages</span><button type="button" class="copy" aria-label="Copy Install the packages">Copy</button></div><pre tabindex="0"><code class="language-bash"><span class="syntax-command">python</span> <span class="syntax-option">-m</span> <span class="syntax-argument">pip</span> <span class="syntax-argument">install</span> <span class="syntax-argument">Flask</span> <span class="syntax-argument">argon2-cffi</span> <span class="syntax-argument">Flask-WTF</span></code></pre></div>
+<p>Flask serves the application, argon2-cffi provides password hashing, and Flask-WTF supplies the form protection already included in the example. Allow five minutes for setup, 20 minutes each for Parts 1 and 2, 65 minutes for Part 3, and ten minutes for Part 4.</p>
+<p>Use invented credentials. The application runs at <code>127.0.0.1</code> on your own machine, with debugging disabled. Its people and messages are teaching examples. Work individually or in pairs and keep your own code and notes.</p>
+</section>
+<section class="section" id="part1"><h2>1. Entropy and guessing</h2><p class="goal">About 20 minutes. Lecture slides 26-30.</p>
+<p>A six-digit PIN has a million possible values, including those beginning with zero. That does not mean that a person chooses each value with the same probability. We will compare a random generator with a distribution in which a few PINs are especially popular.</p>
+<h3>Uniform choices</h3>
+<p>If each of \(L\) positions is chosen independently and uniformly from \(N\) possibilities, the search space \(S\) and Shannon entropy \(H\), in bits, are:</p>
+<div class="formula">\[ S=N^L \qquad H=\log_2 S=L\log_2 N \]</div>
+<p>For example, three independent fair coin tosses have \(2^3=8\) outcomes and 3 bits of entropy. For a uniformly chosen secret, trying distinct candidates in any fixed order takes \((S+1)/2\) guesses on average.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Random generation schemes"><table><caption>Calculate the search space and entropy for each generator</caption>
+<thead><tr><th scope="col">Generator</th><th scope="col">Choices per position, \(N\)</th><th scope="col">Positions, \(L\)</th></tr></thead><tbody>
+<tr><td>Random four-digit PIN</td><td>10</td><td>4</td></tr>
+<tr><td>Random six-digit PIN</td><td>10</td><td>6</td></tr>
+<tr><td>Random password using a-z and 0-9</td><td>36</td><td>10</td></tr>
+<tr><td>Four independent random words, with repetition allowed</td><td>2,048 words</td><td>4 words</td></tr></tbody></table></div>
+<h3>Unequal choices and min-entropy</h3>
+<p>Min-entropy describes the probability of the attacker's best single guess. If \(X\) is the chosen secret and \(p_{\max}\) is the probability of its most likely value, then:</p>
+<div class="formula">\[ H_{\infty}(X)=-\log_2 p_{\max} \qquad P_{\text{best guess}}=2^{-H_{\infty}(X)} \]</div>
+<p>For a uniform distribution, min-entropy and Shannon entropy both equal \(\log_2 S\). They need not agree when some choices are more likely than others. Min-entropy alone does not give the average number of guesses needed to recover a secret. <a class="source" href="#s1">[1]</a></p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Invented PIN survey"><table><caption>Invented results from a survey of 100 PIN choices</caption>
+<thead><tr><th scope="col">PIN</th><th scope="col">Count</th><th scope="col">Probability for this exercise</th></tr></thead><tbody>
+<tr><td><code>1234</code></td><td>40</td><td>0.40</td></tr><tr><td><code>0000</code></td><td>20</td><td>0.20</td></tr><tr><td><code>1111</code></td><td>15</td><td>0.15</td></tr><tr><td><code>2580</code></td><td>15</td><td>0.15</td></tr><tr><td><code>1212</code></td><td>10</td><td>0.10</td></tr></tbody></table></div>
+<p>Treat these frequencies as the assumed distribution for the exercise: \(p(x)=\text{count}(x)/100\). They are not measurements of real PIN use. A small survey would not establish the probabilities for an entire population.</p>
+
+<p>Create <code>entropy.py</code> using this outline. Python's <code>math.log2</code> gives a base-2 logarithm, and <code>counts.values()</code> gives the values in a dictionary.</p>
+<div class="codebox"><div class="codebar"><span>entropy.py</span><button type="button" class="copy" aria-label="Copy entropy.py">Copy</button></div><pre tabindex="0"><code id="code-entropy-py" class="language-python"><span class="syntax-keyword">import</span> math
+
+schemes <span class="syntax-operator">=</span> [
+    (<span class="syntax-string">&quot;</span><span class="syntax-string">Four-digit PIN</span><span class="syntax-string">&quot;</span>, <span class="syntax-number">10</span>, <span class="syntax-number">4</span>),
+    (<span class="syntax-string">&quot;</span><span class="syntax-string">Six-digit PIN</span><span class="syntax-string">&quot;</span>, <span class="syntax-number">10</span>, <span class="syntax-number">6</span>),
+    (<span class="syntax-string">&quot;</span><span class="syntax-string">Ten characters from a-z and 0-9</span><span class="syntax-string">&quot;</span>, <span class="syntax-number">36</span>, <span class="syntax-number">10</span>),
+    (<span class="syntax-string">&quot;</span><span class="syntax-string">Four words from a list of 2048</span><span class="syntax-string">&quot;</span>, <span class="syntax-number">2048</span>, <span class="syntax-number">4</span>),
+]
+pin_counts <span class="syntax-operator">=</span> {<span class="syntax-string">&quot;</span><span class="syntax-string">1234</span><span class="syntax-string">&quot;</span>: <span class="syntax-number">40</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">0000</span><span class="syntax-string">&quot;</span>: <span class="syntax-number">20</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">1111</span><span class="syntax-string">&quot;</span>: <span class="syntax-number">15</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">2580</span><span class="syntax-string">&quot;</span>: <span class="syntax-number">15</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">1212</span><span class="syntax-string">&quot;</span>: <span class="syntax-number">10</span>}
+
+
+<span class="syntax-keyword">def</span> <span class="syntax-function">entropy_bits</span>(choices, length):
+    <span class="syntax-comment"># TODO: return the entropy of this uniform, independent generator.</span>
+    <span class="syntax-keyword">raise</span> NotImplementedError
+
+
+<span class="syntax-keyword">def</span> <span class="syntax-function">min_entropy</span>(counts):
+    <span class="syntax-comment"># TODO: use the largest relative frequency.</span>
+    <span class="syntax-keyword">raise</span> NotImplementedError
+
+
+<span class="syntax-keyword">for</span> name, choices, length <span class="syntax-operator">in</span> schemes:
+    <span class="syntax-builtin">print</span>(name, choices <span class="syntax-operator">*</span><span class="syntax-operator">*</span> length, entropy_bits(choices, length))
+<span class="syntax-builtin">print</span>(<span class="syntax-string">&quot;</span><span class="syntax-string">PIN min-entropy:</span><span class="syntax-string">&quot;</span>, min_entropy(pin_counts))</code></pre></div>
+<div class="task"><h3>Exercise: calculate and interpret</h3><ul>
+<li>Complete both functions and run the program. Compare the four uniform generators. For the invented PIN distribution, calculate the best single-guess success probability and the fraction covered by the three most likely guesses.</li>
+<li>Compare its min-entropy with that of a uniform four-digit PIN. Why would assigning <code>Durham2026!</code> entropy from its length and character set make an unjustified assumption about how it was chosen?</li>
+</ul></div>
+<p>A large space of possible passwords is useful only if the selection process makes it hard to predict which possibilities people will choose. The next task exploits predictable choices without searching the entire space.</p></section>
+
+<section class="section" id="part2"><h2>2. A dictionary attack on a password hash</h2>
+<p class="goal">About 20 minutes. Lecture slides 19 and 21-30.</p>
+<p>A dictionary attack tries likely passwords, including variations on words. It differs from an exhaustive search through every possible string. In this exercise, an attacker has obtained one encoded Argon2id hash and can test guesses locally.</p>
+<p>Argon2id makes a guess consume time and memory. Its encoded record includes the salt and cost parameters, so a verifier can use those settings again. A fresh salt prevents identical passwords from producing identical stored records; it does not make a weak password unguessable. <a class="source" href="#s2">[2]</a></p>
+<p>The <code>PasswordHasher</code> library supplies two operations we need: <code>hash(password)</code> creates an encoded record, and <code>verify(encoded, guess)</code> checks a candidate against it. Verification returns <code>True</code> on a match and raises <code>VerifyMismatchError</code> otherwise. Catch that exception to continue to the next guess. <a class="source" href="#s3">[3]</a></p>
+<p>Create <code>dictionary_attack.py</code> from the outline below. The target was generated specifically for this practical. The small candidate list is included in the code.</p>
+<div class="codebox"><div class="codebar"><span>dictionary_attack.py</span><button type="button" class="copy" aria-label="Copy dictionary_attack.py">Copy</button></div><pre tabindex="0"><code id="code-dictionary_attack-py" class="language-python"><span class="syntax-keyword">from</span> time <span class="syntax-keyword">import</span> perf_counter
+<span class="syntax-keyword">from</span> argon2 <span class="syntax-keyword">import</span> PasswordHasher
+<span class="syntax-keyword">from</span> argon2.exceptions <span class="syntax-keyword">import</span> VerifyMismatchError
+
+hasher <span class="syntax-operator">=</span> PasswordHasher()
+target <span class="syntax-operator">=</span> <span class="syntax-string">&quot;</span><span class="syntax-string">$argon2id$v=19$m=65536,t=3,p=4$t5oZT5yx6tvbxTJpBgkGcA$OP0ATd4cRE5VmIbPjA0NGlC4jXQTIydfVxqMAaU4m6w</span><span class="syntax-string">&quot;</span>
+candidates <span class="syntax-operator">=</span> [
+    <span class="syntax-string">&quot;</span><span class="syntax-string">password</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">letmein</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">welcome</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">harbour21</span><span class="syntax-string">&quot;</span>,
+    <span class="syntax-string">&quot;</span><span class="syntax-string">harbour2026</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">Harbour2026!</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">correct horse battery staple</span><span class="syntax-string">&quot;</span>,
+]
+
+
+<span class="syntax-keyword">def</span> <span class="syntax-function">find_password</span>(encoded, guesses):
+    <span class="syntax-comment"># TODO: test guesses in order; return the first match, or None.</span>
+    <span class="syntax-keyword">raise</span> NotImplementedError
+
+
+start <span class="syntax-operator">=</span> perf_counter()
+found <span class="syntax-operator">=</span> find_password(target, candidates)
+elapsed <span class="syntax-operator">=</span> perf_counter() <span class="syntax-operator">-</span> start
+<span class="syntax-builtin">print</span>(<span class="syntax-string">&quot;</span><span class="syntax-string">Result:</span><span class="syntax-string">&quot;</span>, found)
+<span class="syntax-builtin">print</span>(<span class="syntax-string">f</span><span class="syntax-string">&quot;</span><span class="syntax-string">Elapsed: </span><span class="syntax-string">{</span>elapsed<span class="syntax-string">:</span><span class="syntax-string">.3f</span><span class="syntax-string">}</span><span class="syntax-string"> seconds</span><span class="syntax-string">&quot;</span>)</code></pre></div>
+<div class="task"><h3>Exercise: recover the practice password</h3><ul>
+<li>Complete <code>find_password</code>. Try the candidates in order, return the first match, and return <code>None</code> if none matches. Print the number of guesses as well as the elapsed time.</li>
+<li>Remove the matching candidate and run the program again. What does an unsuccessful search tell you about the password? Would an online login limit stop this offline loop?</li>
+<li>Hash the recovered password twice with <code>hasher.hash</code>. Compare the strings, then use <code>verify</code> on each. Explain why comparing a freshly generated hash string with the target is not a valid password check.</li>
+</ul></div>
+<p>Your timing describes this run, on this machine, with this Argon2 configuration. Do not treat it as a universal cracking rate. A slow hash increases the cost of each guess; it does not increase the entropy of the password. <a class="source" href="#s5">[5]</a></p>
+</section>
+
+<section class="section" id="part3"><h2>3. Build a Flask application</h2>
+<p class="goal">About 65 minutes. Lecture slides 8, 11-12, 49-53 and 62-71.</p>
+<p>You will build a guestbook for a small walking society. After signing in, a member sees the messages left by everyone else and a form for posting a short message of their own. Each message shows its author and has a Delete button.</p>
+<h3>What the finished application should do</h3>
+<p>There are three accounts: Alice and Bob are ordinary members; Carol is the moderator. All three can read the guestbook and post messages. Carol's extra permission is that she can remove someone else's message, for example if it contains spam.</p>
+<ul class="policy"><li>A visitor who has not logged in cannot read, post or delete messages.</li><li>A member can delete their own messages, but cannot delete another person's.</li><li>A moderator can delete any message.</li><li>Inactive accounts and unrecognised roles are refused access.</li></ul>
+<p>For example, Bob can read Alice's message and add a reply, but he cannot delete Alice's message. Carol can delete either person's message. Logging in establishes who is making the request; the deletion check decides whether they may change that particular message.</p>
+<p>The page and the code for adding messages are supplied. Your work is to complete four gaps: hash a password, verify a password, decide who may delete a message, and enforce that decision. There is no registration form or database design to implement.</p>
+<p>The guestbook starts with one message from Alice and one from Bob. Messages are kept in memory and reset to those examples whenever you restart the application. Account records are saved in <code>users.json</code>. This makes it easy to repeat a test without setting up a database.</p>
+<h3>How Flask handles a request</h3>
+<p>A route connects a URL to a Python function. For example, <code>@app.route("/login")</code> tells Flask which function handles that address. A GET request normally asks for a page; a form uses POST to send its fields. <code>request.form</code> contains those fields, and <code>redirect</code> sends the browser to another URL. <a class="source" href="#s12">[12]</a></p>
+<figure class="system-figure"><div class="figure-scroll" tabindex="0" role="region" aria-label="Guestbook access checks"><img src="assets/access-system.svg" width="1100" height="560" alt="A Delete form sends a POST request with a message ID, CSRF token and signed session cookie. The Flask route checks the current account, looks up the message, then calls can_delete using the account role and message author. Only an allowed request removes the message."></div><figcaption>Figure 1. The checks made when someone presses Delete. Flask-WTF also checks the form's CSRF token. <a href="assets/access-system.svg">Open the diagram at full size</a>.</figcaption></figure>
+<h3>3.1 Create the application</h3>
+<p>Create <code>app.py</code> and copy the following application into it. Do not call the file <code>flask.py</code>, as that would hide the installed package. Work through the four marked gaps in the order below; the other code is supplied so that you can concentrate on the security checks.</p>
+<details class="starter-code" open><summary>Application outline for app.py</summary>
+<div class="codebox"><div class="codebar"><span>app.py</span><button type="button" class="copy" aria-label="Copy app.py">Copy</button></div><pre tabindex="0"><code id="code-app-py" class="language-python"><span class="syntax-string">&quot;&quot;&quot;Local guestbook. Complete the four TODOs shown on the page.&quot;&quot;&quot;</span>
+
+<span class="syntax-keyword">import</span> getpass
+<span class="syntax-keyword">import</span> json
+<span class="syntax-keyword">import</span> secrets
+<span class="syntax-keyword">import</span> sys
+<span class="syntax-keyword">from</span> datetime <span class="syntax-keyword">import</span> timedelta
+<span class="syntax-keyword">from</span> pathlib <span class="syntax-keyword">import</span> Path
+
+<span class="syntax-keyword">from</span> argon2 <span class="syntax-keyword">import</span> PasswordHasher
+<span class="syntax-keyword">from</span> argon2.exceptions <span class="syntax-keyword">import</span> VerifyMismatchError
+<span class="syntax-keyword">from</span> flask <span class="syntax-keyword">import</span> Flask, abort, redirect, render_template_string, request, session
+<span class="syntax-keyword">from</span> flask_wtf.csrf <span class="syntax-keyword">import</span> CSRFProtect
+
+app <span class="syntax-operator">=</span> Flask(__name__)
+app<span class="syntax-operator">.</span>config<span class="syntax-operator">.</span>update(
+    SECRET_KEY<span class="syntax-operator">=</span>secrets<span class="syntax-operator">.</span>token_hex(<span class="syntax-number">32</span>),
+    SESSION_COOKIE_HTTPONLY<span class="syntax-operator">=</span><span class="syntax-keyword">True</span>,
+    SESSION_COOKIE_SAMESITE<span class="syntax-operator">=</span><span class="syntax-string">&quot;</span><span class="syntax-string">Lax</span><span class="syntax-string">&quot;</span>,
+    PERMANENT_SESSION_LIFETIME<span class="syntax-operator">=</span>timedelta(minutes<span class="syntax-operator">=</span><span class="syntax-number">30</span>),
+)
+CSRFProtect(app)
+hasher <span class="syntax-operator">=</span> PasswordHasher()
+database <span class="syntax-operator">=</span> Path(__file__)<span class="syntax-operator">.</span>with_name(<span class="syntax-string">&quot;</span><span class="syntax-string">users.json</span><span class="syntax-string">&quot;</span>)
+users <span class="syntax-operator">=</span> json<span class="syntax-operator">.</span>loads(database<span class="syntax-operator">.</span>read_text()) <span class="syntax-keyword">if</span> database<span class="syntax-operator">.</span>exists() <span class="syntax-keyword">else</span> {}
+<span class="syntax-comment"># An unknown username still takes a password-verification operation.</span>
+dummy_hash <span class="syntax-operator">=</span> hasher<span class="syntax-operator">.</span>hash(secrets<span class="syntax-operator">.</span>token_urlsafe(<span class="syntax-number">32</span>))
+<span class="syntax-comment"># Messages reset to these examples when the application restarts.</span>
+messages <span class="syntax-operator">=</span> {
+    <span class="syntax-number">1</span>: {<span class="syntax-string">&quot;</span><span class="syntax-string">author</span><span class="syntax-string">&quot;</span>: <span class="syntax-string">&quot;</span><span class="syntax-string">alice</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">text</span><span class="syntax-string">&quot;</span>: <span class="syntax-string">&quot;</span><span class="syntax-string">Thanks for organising the walk!</span><span class="syntax-string">&quot;</span>},
+    <span class="syntax-number">2</span>: {<span class="syntax-string">&quot;</span><span class="syntax-string">author</span><span class="syntax-string">&quot;</span>: <span class="syntax-string">&quot;</span><span class="syntax-string">bob</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">text</span><span class="syntax-string">&quot;</span>: <span class="syntax-string">&quot;</span><span class="syntax-string">Shall we meet at ten next Saturday?</span><span class="syntax-string">&quot;</span>},
+}
+
+
+<span class="syntax-keyword">def</span> <span class="syntax-function">save_users</span>():
+    temporary <span class="syntax-operator">=</span> database<span class="syntax-operator">.</span>with_suffix(<span class="syntax-string">&quot;</span><span class="syntax-string">.tmp</span><span class="syntax-string">&quot;</span>)
+    temporary<span class="syntax-operator">.</span>write_text(json<span class="syntax-operator">.</span>dumps(users, indent<span class="syntax-operator">=</span><span class="syntax-number">2</span>), encoding<span class="syntax-operator">=</span><span class="syntax-string">&quot;</span><span class="syntax-string">utf-8</span><span class="syntax-string">&quot;</span>)
+    temporary<span class="syntax-operator">.</span>replace(database)
+
+
+<span class="syntax-keyword">def</span> <span class="syntax-function">make_hash</span>(password):
+    <span class="syntax-comment"># TODO 1: return the library&#x27;s complete encoded Argon2id hash.</span>
+    <span class="syntax-keyword">raise</span> NotImplementedError(<span class="syntax-string">&quot;</span><span class="syntax-string">Complete make_hash before initialising accounts</span><span class="syntax-string">&quot;</span>)
+
+
+<span class="syntax-keyword">def</span> <span class="syntax-function">password_matches</span>(encoded, password):
+    <span class="syntax-comment"># TODO 2: verify the password; return False for VerifyMismatchError.</span>
+    <span class="syntax-keyword">return</span> <span class="syntax-keyword">False</span>
+
+
+<span class="syntax-keyword">def</span> <span class="syntax-function">can_delete</span>(user, message):
+    <span class="syntax-comment"># TODO 3: implement the deletion policy, returning True or False.</span>
+    <span class="syntax-keyword">return</span> <span class="syntax-keyword">False</span>
+
+
+<span class="syntax-keyword">def</span> <span class="syntax-function">current_user</span>():
+    user <span class="syntax-operator">=</span> users<span class="syntax-operator">.</span>get(session<span class="syntax-operator">.</span>get(<span class="syntax-string">&quot;</span><span class="syntax-string">username</span><span class="syntax-string">&quot;</span>))
+    <span class="syntax-keyword">if</span> user <span class="syntax-operator">and</span> user[<span class="syntax-string">&quot;</span><span class="syntax-string">active</span><span class="syntax-string">&quot;</span>] <span class="syntax-operator">and</span> session<span class="syntax-operator">.</span>get(<span class="syntax-string">&quot;</span><span class="syntax-string">version</span><span class="syntax-string">&quot;</span>) <span class="syntax-operator">==</span> user[<span class="syntax-string">&quot;</span><span class="syntax-string">version</span><span class="syntax-string">&quot;</span>]:
+        <span class="syntax-keyword">return</span> user
+    <span class="syntax-keyword">return</span> <span class="syntax-keyword">None</span>
+
+
+LOGIN <span class="syntax-operator">=</span> <span class="syntax-string">&quot;&quot;&quot;</span><span class="syntax-string">
+</span><span class="syntax-string">&lt;!doctype html&gt;&lt;title&gt;Society guestbook&lt;/title&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">&lt;h1&gt;Log in to the guestbook&lt;/h1&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">&lt;p&gt;</span><span class="syntax-string">{{</span><span class="syntax-string"> error }}&lt;/p&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">&lt;form method=</span><span class="syntax-string">&quot;</span><span class="syntax-string">post</span><span class="syntax-string">&quot;</span><span class="syntax-string">&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">  &lt;input type=</span><span class="syntax-string">&quot;</span><span class="syntax-string">hidden</span><span class="syntax-string">&quot;</span><span class="syntax-string"> name=</span><span class="syntax-string">&quot;</span><span class="syntax-string">csrf_token</span><span class="syntax-string">&quot;</span><span class="syntax-string"> value=</span><span class="syntax-string">&quot;</span><span class="syntax-string">{{</span><span class="syntax-string"> csrf_token() }}</span><span class="syntax-string">&quot;</span><span class="syntax-string">&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">  &lt;p&gt;&lt;label&gt;Username &lt;input name=</span><span class="syntax-string">&quot;</span><span class="syntax-string">username</span><span class="syntax-string">&quot;</span><span class="syntax-string"> required&gt;&lt;/label&gt;&lt;/p&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">  &lt;p&gt;&lt;label&gt;Password &lt;input name=</span><span class="syntax-string">&quot;</span><span class="syntax-string">password</span><span class="syntax-string">&quot;</span><span class="syntax-string"> type=</span><span class="syntax-string">&quot;</span><span class="syntax-string">password</span><span class="syntax-string">&quot;</span><span class="syntax-string"> required&gt;&lt;/label&gt;&lt;/p&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">  &lt;button&gt;Log in&lt;/button&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">&lt;/form&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">&quot;&quot;&quot;</span>
+
+HOME <span class="syntax-operator">=</span> <span class="syntax-string">&quot;&quot;&quot;</span><span class="syntax-string">
+</span><span class="syntax-string">&lt;!doctype html&gt;&lt;title&gt;Society guestbook&lt;/title&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">&lt;h1&gt;Society guestbook&lt;/h1&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">&lt;p&gt;Signed in as </span><span class="syntax-string">{{</span><span class="syntax-string"> user[</span><span class="syntax-string">&quot;</span><span class="syntax-string">id</span><span class="syntax-string">&quot;</span><span class="syntax-string">] }} (</span><span class="syntax-string">{{</span><span class="syntax-string"> user[</span><span class="syntax-string">&quot;</span><span class="syntax-string">role</span><span class="syntax-string">&quot;</span><span class="syntax-string">] }})&lt;/p&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">{</span><span class="syntax-string">% f</span><span class="syntax-string">or number, message in messages.items() </span><span class="syntax-string">%</span><span class="syntax-string">}</span><span class="syntax-string">
+</span><span class="syntax-string">  &lt;article&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">    &lt;p&gt;</span><span class="syntax-string">{{</span><span class="syntax-string"> message[</span><span class="syntax-string">&quot;</span><span class="syntax-string">text</span><span class="syntax-string">&quot;</span><span class="syntax-string">] }}&lt;/p&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">    &lt;p&gt;By </span><span class="syntax-string">{{</span><span class="syntax-string"> message[</span><span class="syntax-string">&quot;</span><span class="syntax-string">author</span><span class="syntax-string">&quot;</span><span class="syntax-string">] }} (message </span><span class="syntax-string">{{</span><span class="syntax-string"> number }})&lt;/p&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">    &lt;form method=</span><span class="syntax-string">&quot;</span><span class="syntax-string">post</span><span class="syntax-string">&quot;</span><span class="syntax-string"> action=</span><span class="syntax-string">&quot;</span><span class="syntax-string">/delete/</span><span class="syntax-string">{{</span><span class="syntax-string"> number }}</span><span class="syntax-string">&quot;</span><span class="syntax-string">&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">      &lt;input type=</span><span class="syntax-string">&quot;</span><span class="syntax-string">hidden</span><span class="syntax-string">&quot;</span><span class="syntax-string"> name=</span><span class="syntax-string">&quot;</span><span class="syntax-string">csrf_token</span><span class="syntax-string">&quot;</span><span class="syntax-string"> value=</span><span class="syntax-string">&quot;</span><span class="syntax-string">{{</span><span class="syntax-string"> csrf_token() }}</span><span class="syntax-string">&quot;</span><span class="syntax-string">&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">      &lt;button&gt;Delete message </span><span class="syntax-string">{{</span><span class="syntax-string"> number }}&lt;/button&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">    &lt;/form&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">  &lt;/article&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">{</span><span class="syntax-string">% e</span><span class="syntax-string">ndfor </span><span class="syntax-string">%</span><span class="syntax-string">}</span><span class="syntax-string">
+</span><span class="syntax-string">&lt;h2&gt;Leave a message&lt;/h2&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">&lt;form method=</span><span class="syntax-string">&quot;</span><span class="syntax-string">post</span><span class="syntax-string">&quot;</span><span class="syntax-string"> action=</span><span class="syntax-string">&quot;</span><span class="syntax-string">/add</span><span class="syntax-string">&quot;</span><span class="syntax-string">&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">  &lt;input type=</span><span class="syntax-string">&quot;</span><span class="syntax-string">hidden</span><span class="syntax-string">&quot;</span><span class="syntax-string"> name=</span><span class="syntax-string">&quot;</span><span class="syntax-string">csrf_token</span><span class="syntax-string">&quot;</span><span class="syntax-string"> value=</span><span class="syntax-string">&quot;</span><span class="syntax-string">{{</span><span class="syntax-string"> csrf_token() }}</span><span class="syntax-string">&quot;</span><span class="syntax-string">&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">  &lt;p&gt;&lt;label&gt;Message &lt;textarea name=</span><span class="syntax-string">&quot;</span><span class="syntax-string">text</span><span class="syntax-string">&quot;</span><span class="syntax-string"> maxlength=</span><span class="syntax-string">&quot;</span><span class="syntax-string">300</span><span class="syntax-string">&quot;</span><span class="syntax-string"> required&gt;&lt;/textarea&gt;&lt;/label&gt;&lt;/p&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">  &lt;button&gt;Post message&lt;/button&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">&lt;/form&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">&lt;form method=</span><span class="syntax-string">&quot;</span><span class="syntax-string">post</span><span class="syntax-string">&quot;</span><span class="syntax-string"> action=</span><span class="syntax-string">&quot;</span><span class="syntax-string">/logout</span><span class="syntax-string">&quot;</span><span class="syntax-string">&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">  &lt;input type=</span><span class="syntax-string">&quot;</span><span class="syntax-string">hidden</span><span class="syntax-string">&quot;</span><span class="syntax-string"> name=</span><span class="syntax-string">&quot;</span><span class="syntax-string">csrf_token</span><span class="syntax-string">&quot;</span><span class="syntax-string"> value=</span><span class="syntax-string">&quot;</span><span class="syntax-string">{{</span><span class="syntax-string"> csrf_token() }}</span><span class="syntax-string">&quot;</span><span class="syntax-string">&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">  &lt;button&gt;Log out&lt;/button&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">&lt;/form&gt;</span><span class="syntax-string">
+</span><span class="syntax-string">&quot;&quot;&quot;</span>
+
+
+<span class="syntax-decorator">@app</span><span class="syntax-operator">.</span>route(<span class="syntax-string">&quot;</span><span class="syntax-string">/login</span><span class="syntax-string">&quot;</span>, methods<span class="syntax-operator">=</span>[<span class="syntax-string">&quot;</span><span class="syntax-string">GET</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">POST</span><span class="syntax-string">&quot;</span>])
+<span class="syntax-keyword">def</span> <span class="syntax-function">login</span>():
+    error <span class="syntax-operator">=</span> <span class="syntax-string">&quot;</span><span class="syntax-string">&quot;</span>
+    <span class="syntax-keyword">if</span> request<span class="syntax-operator">.</span>method <span class="syntax-operator">==</span> <span class="syntax-string">&quot;</span><span class="syntax-string">POST</span><span class="syntax-string">&quot;</span>:
+        username <span class="syntax-operator">=</span> request<span class="syntax-operator">.</span>form<span class="syntax-operator">.</span>get(<span class="syntax-string">&quot;</span><span class="syntax-string">username</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">&quot;</span>)
+        password <span class="syntax-operator">=</span> request<span class="syntax-operator">.</span>form<span class="syntax-operator">.</span>get(<span class="syntax-string">&quot;</span><span class="syntax-string">password</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">&quot;</span>)
+        user <span class="syntax-operator">=</span> users<span class="syntax-operator">.</span>get(username)
+        encoded <span class="syntax-operator">=</span> user[<span class="syntax-string">&quot;</span><span class="syntax-string">password_hash</span><span class="syntax-string">&quot;</span>] <span class="syntax-keyword">if</span> user <span class="syntax-keyword">else</span> dummy_hash
+        matched <span class="syntax-operator">=</span> password_matches(encoded, password)
+        <span class="syntax-keyword">if</span> matched <span class="syntax-operator">and</span> user <span class="syntax-operator">and</span> user[<span class="syntax-string">&quot;</span><span class="syntax-string">active</span><span class="syntax-string">&quot;</span>]:
+            <span class="syntax-keyword">if</span> hasher<span class="syntax-operator">.</span>check_needs_rehash(encoded):
+                user[<span class="syntax-string">&quot;</span><span class="syntax-string">password_hash</span><span class="syntax-string">&quot;</span>] <span class="syntax-operator">=</span> hasher<span class="syntax-operator">.</span>hash(password)
+                save_users()
+            session<span class="syntax-operator">.</span>clear()
+            session[<span class="syntax-string">&quot;</span><span class="syntax-string">username</span><span class="syntax-string">&quot;</span>] <span class="syntax-operator">=</span> username
+            session[<span class="syntax-string">&quot;</span><span class="syntax-string">version</span><span class="syntax-string">&quot;</span>] <span class="syntax-operator">=</span> user[<span class="syntax-string">&quot;</span><span class="syntax-string">version</span><span class="syntax-string">&quot;</span>]
+            session<span class="syntax-operator">.</span>permanent <span class="syntax-operator">=</span> <span class="syntax-keyword">True</span>
+            <span class="syntax-keyword">return</span> redirect(<span class="syntax-string">&quot;</span><span class="syntax-string">/</span><span class="syntax-string">&quot;</span>)
+        error <span class="syntax-operator">=</span> <span class="syntax-string">&quot;</span><span class="syntax-string">Login failed.</span><span class="syntax-string">&quot;</span>
+    <span class="syntax-keyword">return</span> render_template_string(LOGIN, error<span class="syntax-operator">=</span>error)
+
+
+<span class="syntax-decorator">@app</span><span class="syntax-operator">.</span>route(<span class="syntax-string">&quot;</span><span class="syntax-string">/</span><span class="syntax-string">&quot;</span>)
+<span class="syntax-keyword">def</span> <span class="syntax-function">home</span>():
+    user <span class="syntax-operator">=</span> current_user()
+    <span class="syntax-keyword">if</span> user <span class="syntax-operator">is</span> <span class="syntax-keyword">None</span>:
+        <span class="syntax-keyword">return</span> redirect(<span class="syntax-string">&quot;</span><span class="syntax-string">/login</span><span class="syntax-string">&quot;</span>)
+    <span class="syntax-keyword">if</span> user[<span class="syntax-string">&quot;</span><span class="syntax-string">role</span><span class="syntax-string">&quot;</span>] <span class="syntax-operator">not</span> <span class="syntax-operator">in</span> (<span class="syntax-string">&quot;</span><span class="syntax-string">member</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">moderator</span><span class="syntax-string">&quot;</span>):
+        abort(<span class="syntax-number">403</span>)
+    <span class="syntax-keyword">return</span> render_template_string(HOME, user<span class="syntax-operator">=</span>user, messages<span class="syntax-operator">=</span>messages)
+
+
+<span class="syntax-decorator">@app</span><span class="syntax-operator">.</span>route(<span class="syntax-string">&quot;</span><span class="syntax-string">/add</span><span class="syntax-string">&quot;</span>, methods<span class="syntax-operator">=</span>[<span class="syntax-string">&quot;</span><span class="syntax-string">POST</span><span class="syntax-string">&quot;</span>])
+<span class="syntax-keyword">def</span> <span class="syntax-function">add_message</span>():
+    user <span class="syntax-operator">=</span> current_user()
+    <span class="syntax-keyword">if</span> user <span class="syntax-operator">is</span> <span class="syntax-keyword">None</span>:
+        <span class="syntax-keyword">return</span> redirect(<span class="syntax-string">&quot;</span><span class="syntax-string">/login</span><span class="syntax-string">&quot;</span>)
+    <span class="syntax-keyword">if</span> user[<span class="syntax-string">&quot;</span><span class="syntax-string">role</span><span class="syntax-string">&quot;</span>] <span class="syntax-operator">not</span> <span class="syntax-operator">in</span> (<span class="syntax-string">&quot;</span><span class="syntax-string">member</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">moderator</span><span class="syntax-string">&quot;</span>):
+        abort(<span class="syntax-number">403</span>)
+    text <span class="syntax-operator">=</span> request<span class="syntax-operator">.</span>form<span class="syntax-operator">.</span>get(<span class="syntax-string">&quot;</span><span class="syntax-string">text</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">&quot;</span>)<span class="syntax-operator">.</span>strip()
+    <span class="syntax-keyword">if</span> <span class="syntax-operator">not</span> <span class="syntax-number">1</span> <span class="syntax-operator">&lt;</span><span class="syntax-operator">=</span> <span class="syntax-builtin">len</span>(text) <span class="syntax-operator">&lt;</span><span class="syntax-operator">=</span> <span class="syntax-number">300</span>:
+        abort(<span class="syntax-number">400</span>)
+    number <span class="syntax-operator">=</span> <span class="syntax-builtin">max</span>(messages, default<span class="syntax-operator">=</span><span class="syntax-number">0</span>) <span class="syntax-operator">+</span> <span class="syntax-number">1</span>
+    messages[number] <span class="syntax-operator">=</span> {<span class="syntax-string">&quot;</span><span class="syntax-string">author</span><span class="syntax-string">&quot;</span>: user[<span class="syntax-string">&quot;</span><span class="syntax-string">id</span><span class="syntax-string">&quot;</span>], <span class="syntax-string">&quot;</span><span class="syntax-string">text</span><span class="syntax-string">&quot;</span>: text}
+    <span class="syntax-keyword">return</span> redirect(<span class="syntax-string">&quot;</span><span class="syntax-string">/</span><span class="syntax-string">&quot;</span>)
+
+
+<span class="syntax-decorator">@app</span><span class="syntax-operator">.</span>route(<span class="syntax-string">&quot;</span><span class="syntax-string">/delete/&lt;int:message_id&gt;</span><span class="syntax-string">&quot;</span>, methods<span class="syntax-operator">=</span>[<span class="syntax-string">&quot;</span><span class="syntax-string">POST</span><span class="syntax-string">&quot;</span>])
+<span class="syntax-keyword">def</span> <span class="syntax-function">delete_message</span>(message_id):
+    user <span class="syntax-operator">=</span> current_user()
+    <span class="syntax-keyword">if</span> user <span class="syntax-operator">is</span> <span class="syntax-keyword">None</span>:
+        <span class="syntax-keyword">return</span> redirect(<span class="syntax-string">&quot;</span><span class="syntax-string">/login</span><span class="syntax-string">&quot;</span>)
+    message <span class="syntax-operator">=</span> messages<span class="syntax-operator">.</span>get(message_id)
+    <span class="syntax-keyword">if</span> message <span class="syntax-operator">is</span> <span class="syntax-keyword">None</span>:
+        abort(<span class="syntax-number">404</span>)
+    <span class="syntax-comment"># TODO 4: replace unconditional refusal with a call to can_delete.</span>
+    abort(<span class="syntax-number">403</span>)
+    <span class="syntax-keyword">del</span> messages[message_id]
+    <span class="syntax-keyword">return</span> redirect(<span class="syntax-string">&quot;</span><span class="syntax-string">/</span><span class="syntax-string">&quot;</span>)
+
+
+<span class="syntax-decorator">@app</span><span class="syntax-operator">.</span>route(<span class="syntax-string">&quot;</span><span class="syntax-string">/logout</span><span class="syntax-string">&quot;</span>, methods<span class="syntax-operator">=</span>[<span class="syntax-string">&quot;</span><span class="syntax-string">POST</span><span class="syntax-string">&quot;</span>])
+<span class="syntax-keyword">def</span> <span class="syntax-function">logout</span>():
+    user <span class="syntax-operator">=</span> current_user()
+    <span class="syntax-keyword">if</span> user:
+        <span class="syntax-comment"># Old cookies for this account now carry the wrong version.</span>
+        user[<span class="syntax-string">&quot;</span><span class="syntax-string">version</span><span class="syntax-string">&quot;</span>] <span class="syntax-operator">+</span><span class="syntax-operator">=</span> <span class="syntax-number">1</span>
+        save_users()
+    session<span class="syntax-operator">.</span>clear()
+    <span class="syntax-keyword">return</span> redirect(<span class="syntax-string">&quot;</span><span class="syntax-string">/login</span><span class="syntax-string">&quot;</span>)
+
+
+<span class="syntax-decorator">@app</span><span class="syntax-operator">.</span>after_request
+<span class="syntax-keyword">def</span> <span class="syntax-function">prevent_cached_pages</span>(response):
+    response<span class="syntax-operator">.</span>headers[<span class="syntax-string">&quot;</span><span class="syntax-string">Cache-Control</span><span class="syntax-string">&quot;</span>] <span class="syntax-operator">=</span> <span class="syntax-string">&quot;</span><span class="syntax-string">no-store</span><span class="syntax-string">&quot;</span>
+    <span class="syntax-keyword">return</span> response
+
+
+<span class="syntax-keyword">def</span> <span class="syntax-function">initialise_accounts</span>():
+    <span class="syntax-keyword">if</span> database<span class="syntax-operator">.</span>exists():
+        <span class="syntax-keyword">raise</span> SystemExit(<span class="syntax-string">&quot;</span><span class="syntax-string">users.json already exists; no accounts were overwritten.</span><span class="syntax-string">&quot;</span>)
+    <span class="syntax-keyword">for</span> username, role <span class="syntax-operator">in</span> [(<span class="syntax-string">&quot;</span><span class="syntax-string">alice</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">member</span><span class="syntax-string">&quot;</span>), (<span class="syntax-string">&quot;</span><span class="syntax-string">bob</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">member</span><span class="syntax-string">&quot;</span>), (<span class="syntax-string">&quot;</span><span class="syntax-string">carol</span><span class="syntax-string">&quot;</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">moderator</span><span class="syntax-string">&quot;</span>)]:
+        password <span class="syntax-operator">=</span> getpass<span class="syntax-operator">.</span>getpass(<span class="syntax-string">f</span><span class="syntax-string">&quot;</span><span class="syntax-string">Choose an invented password for </span><span class="syntax-string">{</span>username<span class="syntax-string">}</span><span class="syntax-string">: </span><span class="syntax-string">&quot;</span>)
+        users[username] <span class="syntax-operator">=</span> {
+            <span class="syntax-string">&quot;</span><span class="syntax-string">id</span><span class="syntax-string">&quot;</span>: username, <span class="syntax-string">&quot;</span><span class="syntax-string">role</span><span class="syntax-string">&quot;</span>: role,
+            <span class="syntax-string">&quot;</span><span class="syntax-string">active</span><span class="syntax-string">&quot;</span>: <span class="syntax-keyword">True</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">version</span><span class="syntax-string">&quot;</span>: <span class="syntax-number">0</span>, <span class="syntax-string">&quot;</span><span class="syntax-string">password_hash</span><span class="syntax-string">&quot;</span>: make_hash(password),
+        }
+    save_users()
+    <span class="syntax-builtin">print</span>(<span class="syntax-string">&quot;</span><span class="syntax-string">Created users.json. Now run: python app.py</span><span class="syntax-string">&quot;</span>)
+
+
+<span class="syntax-keyword">if</span> __name__ <span class="syntax-operator">==</span> <span class="syntax-string">&quot;</span><span class="syntax-string">__main__</span><span class="syntax-string">&quot;</span>:
+    <span class="syntax-keyword">if</span> sys<span class="syntax-operator">.</span>argv[<span class="syntax-number">1</span>:] <span class="syntax-operator">==</span> [<span class="syntax-string">&quot;</span><span class="syntax-string">init</span><span class="syntax-string">&quot;</span>]:
+        initialise_accounts()
+    <span class="syntax-keyword">else</span>:
+        app<span class="syntax-operator">.</span>run(host<span class="syntax-operator">=</span><span class="syntax-string">&quot;</span><span class="syntax-string">127.0.0.1</span><span class="syntax-string">&quot;</span>, port<span class="syntax-operator">=</span><span class="syntax-number">5000</span>, debug<span class="syntax-operator">=</span><span class="syntax-keyword">False</span>, threaded<span class="syntax-operator">=</span><span class="syntax-keyword">False</span>)</code></pre></div>
+</details>
+<p>The HTML strings are templates. Expressions such as <code>{{ user["id"] }}</code> are filled in by Flask, which escapes the inserted text. Keeping these small templates in the Python file avoids creating separate HTML files.</p>
+<p>The hidden <code>csrf_token</code> fields and <code>CSRFProtect</code> belong to Flask-WTF. They protect form submissions against cross-site request forgery. Leave that supplied code in place while you work on authentication and authorisation. <a class="source" href="#s13">[13]</a></p>
+<div class="task"><h3>Exercise: create the accounts</h3><ul>
+<li>Complete <code>make_hash</code> using the Argon2 operation from Part 2. Run <code>python app.py init</code> in your project terminal and choose invented passwords for Alice, Bob and Carol.</li>
+<li>Inspect the generated <code>users.json</code>. Identify the username, role and encoded hash. Check that your passwords are not stored as plaintext. Keep this file in your project, outside any public web directory.</li>
+</ul></div>
+<p>Initialisation refuses to overwrite existing accounts. The program reads <code>users.json</code> when it starts. To test a deliberate change to an account's role or active flag in that file, stop the application, make the change and restart it.</p>
+<h3>3.2 Check the password and establish a session</h3>
+<p>Complete <code>password_matches</code> using <code>hasher.verify</code>. Return <code>False</code> for a mismatch. The supplied login route uses your result, checks the account is active, and records the username and account version in the session only after successful authentication.</p>
+<p>The same route checks whether a successfully verified hash needs new parameters and saves a replacement when required. Read the short <a href="https://argon2-cffi.readthedocs.io/en/stable/howto.html">Argon2 password-hashing guide</a> if you need to follow that part. A failed login must never replace a stored password hash. <a class="source" href="#s4">[4]</a></p>
+<div class="codebox"><div class="codebar"><span>Run the application</span><button type="button" class="copy" aria-label="Copy Run the application">Copy</button></div><pre tabindex="0"><code class="language-bash"><span class="syntax-command">python</span> <span class="syntax-string">app.py</span></code></pre></div>
+<p>Open <a href="http://127.0.0.1:5000/">http://127.0.0.1:5000/</a>. Leave the terminal running while you use the browser. Stop it with Ctrl+C; save your edits and start it again when changing the code. If port 5000 is in use, change the final line to use 5001 and open that port instead.</p>
+<div class="task"><h3>Exercise: test login</h3><ul>
+<li>Try Alice's correct password, an incorrect password and an unknown username. Log out between tests. Only the correct credentials should open the guestbook. The error message should not distinguish an unknown username from a wrong password.</li>
+<li>Log in as Alice and post a short message. Check that it appears under her name. In <code>add_message</code>, find where the author is chosen. Why should this come from the logged-in account rather than a name typed into the form?</li>
+<li>Use your browser's developer tools to find the <code>session</code> cookie under Application or Storage. Why does the browser need this after the password has been checked? Why should the password itself never go in it?</li>
+</ul></div>
+<p>Flask's default session cookie is signed, not encrypted: its contents are not a place for secrets. This application stores an identity and a version there, then obtains the current role from the server's account data. The key is generated at startup for this local exercise, so restarting the application signs everyone out. <a class="source" href="#s14">[14]</a></p>
+<h3>3.3 Decide who may delete a message</h3>
+<p>Use the guestbook rules at the start of Part 3 to complete the table. Reading a message does not imply permission to delete it.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Deletion permissions"><table><caption>Complete this table before coding</caption><thead><tr><th scope="col">Account</th><th scope="col">Delete Alice's message</th><th scope="col">Delete Bob's message</th></tr></thead><tbody>
+<tr><td>Alice: member</td><td>Allow</td><td>Deny</td></tr>
+<tr><td>Bob: member</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td></tr>
+<tr><td>Carol: moderator</td><td class="to-complete">Complete</td><td class="to-complete">Complete</td></tr>
+</tbody></table></div>
+<p><code>can_delete(user, message)</code> receives two dictionaries. Use <code>user["id"]</code>, <code>user["role"]</code>, <code>user["active"]</code> and <code>message["author"]</code> to make the decision. Return <code>False</code> if the user is <code>None</code>, inactive or has an unrecognised role.</p>
+<div class="task"><h3>Exercise: implement and enforce the policy</h3><ul>
+<li>Complete <code>can_delete</code>. It should return a Boolean decision without changing the guestbook. Check your conditions against each row of the table.</li>
+<li>In <code>delete_message</code>, replace the unconditional <code>abort(403)</code> with a call to your function. Refuse a denied request before the <code>del</code> statement runs. Take the account's role from its server-side record.</li>
+</ul></div>
+<h3>3.4 Test the checks through the browser</h3>
+<p>For this exercise, every message has a Delete button, including messages you are not allowed to remove. This lets you test the server's refusal. <code>abort(403)</code> produces a Forbidden response; <code>abort(404)</code> means the message was not found. See the <a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes">HTTP status-code list</a> if you need a reminder.</p>
+<div class="task"><h3>Exercise: test the guestbook rules</h3><ul>
+<li>As Alice, try to delete Bob's message before deleting her own. The first attempt should return 403 and leave Bob's message intact; the second should remove Alice's message. Return to the guestbook after a refusal.</li>
+<li>Restart the application to restore the two example messages, then log in as Bob and check his row. Restart once more and check that Carol can delete both messages.</li>
+<li>Log out and reload the guestbook. You should return to the login form. Open a private browser window and check that it also requires a login.</li>
+</ul></div>
+<p>The Delete form makes a POST request to <code>/delete/message_id</code>. Typing that address into the browser makes a GET request, which this route does not accept. A real interface could hide buttons that a user cannot use, but the server must still check every deletion request. In your coursework explanations, distinguish the permission rule from the code that enforces it. <a class="source" href="#s6">[6]</a></p>
+</section>
+
+<section class="section" id="part4"><h2>4. Review your application</h2>
+<p class="goal">About ten minutes. Lecture slides 11-12, 19-20 and 69-71.</p>
+<p>Trace one successful deletion from the browser to the change in the guestbook. The cookie identifies a session, <code>current_user</code> checks the account, and <code>can_delete</code> decides whether that account may remove the chosen message.</p>
+<div class="task"><h3>Exercise: explain what your checks achieve</h3><ul>
+<li>Compare Part 2's offline attack with guessing passwords through <code>/login</code>. Which could be slowed by a server-side attempt limit? Which is affected by the Argon2 cost parameters?</li>
+<li>Read <code>logout</code> and the version comparison in <code>current_user</code>. Explain why a copied old cookie stops working after logout. What happens to another browser already logged in to the same account?</li>
+<li>Suppose Alice changed the message number in a deletion request or added <code>role=moderator</code> to its form data. Explain why neither should let her delete Bob's message. Which values does your check trust, and where do they come from?</li>
+</ul></div>
+<h3>Relating it to an incident</h3>
+<p>The 2023 23andMe breach involved login details stolen from other sites, with information also exposed through connections to compromised accounts. This was credential stuffing, rather than evidence that the attackers first cracked 23andMe's stored hashes. Explain why correct Argon2 storage alone would not stop someone who already knew a reused password. <a class="source" href="#s8">[8]</a> <a class="source" href="#s9">[9]</a></p>
+<p>The local application demonstrates hashing, authentication and access checks. It has no online attempt limit or MFA. Its JSON store and per-process signing key are teaching simplifications. A deployed service needs suitable persistent storage, managed signing keys, HTTPS and secure cookies, along with recovery and monitoring. <a class="source" href="#s7">[7]</a> <a class="source" href="#s15">[15]</a></p>
+</section>
+<section class="section" id="further-research"><h2>Further Research</h2>
+<p>After the class, use one of the following to practise a different part of the lecture.</p><ul>
+<li><strong>Mandatory access control.</strong> Write a second policy function using Bell-LaPadula. Represent a label as a level and a set of compartments. Label \(A\) dominates \(B\) when its level is at least as high and its compartments include all of \(B\)'s. Permit reading when the subject dominates the object, and writing when the object dominates the subject. Use a fixed current subject label and exclude trusted declassification. Test equal labels, different levels and incomparable compartment sets. See slides 58-61.</li>
+<li><strong>Biometric thresholds.</strong> Write a function that takes genuine-user scores, impostor scores and a threshold, accepting scores at or above the threshold. Return the false rejection and false acceptance rates using the correct denominator for each. Try several thresholds with invented, overlapping score lists. Explain why these toy results do not measure the security of a real biometric system. See slides 14-17 and 38-39.</li></ul></section>
+<section class="section" id="reference"><h2>Sources and useful references</h2>
+<p>The slide numbers refer to the supplied <em>Authentication, Authorisation and Access Control</em> lecture. Read the short Argon2 guide during Parts 2 and 3; the other links are references for particular questions.</p><ol class="sources">
+<li id="s1"><a href="https://csrc.nist.gov/glossary/term/min_entropy">NIST: min-entropy</a>. Definition in terms of the most probable outcome.</li>
+<li id="s2"><a href="https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html">OWASP: Password Storage</a>. Salts, work factors and Argon2id.</li>
+<li id="s3"><a href="https://argon2-cffi.readthedocs.io/en/stable/api.html">argon2-cffi: API reference</a>. <code>PasswordHasher</code>, verification exceptions and parameter checks.</li>
+<li id="s4"><a href="https://argon2-cffi.readthedocs.io/en/stable/howto.html">argon2-cffi: How to Hash a Password</a>. The short guide used in Part 2.</li>
+<li id="s5"><a href="https://argon2-cffi.readthedocs.io/en/stable/parameters.html">argon2-cffi: Choosing Parameters</a>. Selecting and measuring costs for a deployment.</li>
+<li id="s6"><a href="https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html">OWASP: Authorization</a>. Default denial and checking every request.</li>
+<li id="s7"><a href="https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html">OWASP: Session Management</a>. Expiry, logout and invalidation.</li>
+<li id="s8"><a href="https://ico.org.uk/about-the-ico/media-centre/news-and-blogs/2025/06/23andme-fined-for-failing-to-protect-uk-users-genetic-data/">ICO: findings on the 23andMe breach</a>, 17 June 2025.</li>
+<li id="s9"><a href="https://www.priv.gc.ca/en/opc-actions-and-decisions/investigations/investigations-into-businesses/2025/pipeda-2025-001/">Canadian and UK regulators: joint investigation</a>, 20 June 2025. Paragraphs 27-31 explain the wider exposure.</li>
+<li id="s10"><a href="https://www.w3.org/TR/webauthn-2/">W3C: Web Authentication</a>. Relying-party scope and origin checks.</li>
+<li id="s11"><a href="https://fidoalliance.org/passkeys/">FIDO Alliance: passkeys</a>. Device storage, synchronisation and authentication.</li>
+
+<li id="s12"><a href="https://flask.palletsprojects.com/en/stable/quickstart/">Flask: Quickstart</a>. Routes, request data and templates.</li>
+<li id="s13"><a href="https://flask-wtf.readthedocs.io/en/1.2.x/csrf/">Flask-WTF: CSRF Protection</a>. The supplied form protection.</li>
+<li id="s14"><a href="https://flask.palletsprojects.com/en/stable/api/#sessions">Flask: Sessions</a>. Signed cookie sessions.</li>
+<li id="s15"><a href="https://flask.palletsprojects.com/en/stable/web-security/">Flask: Security Considerations</a>. Cookie settings and deployment concerns.</li>
+</ol></section>
+</div></div></main><footer><div class="wrap"><p>COMP2211 Security<br>Durham University: Dr Carlton Shepherd</p><div class="footer-links"><a href="../index.html">All practicals</a><a href="../week3/index.html">Week 3</a></div></div></footer>
+<p id="copy-status" class="sr-only" role="status" aria-live="polite"></p><script src="assets/page.js"></script></body></html>

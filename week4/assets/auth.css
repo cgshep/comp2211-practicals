@@ -1,0 +1,23 @@
+.task ul{margin:0;list-style-type:disc}.goal{font-size:15px;color:var(--muted)}
+.formula{margin:20px 0;padding:12px 15px;background:#f7f4f9;border-left:3px solid var(--purple);overflow-x:auto}
+.formula mjx-container[display="true"]{margin:.4em 0!important}
+mjx-container{max-width:100%}
+.system-figure{margin:24px 0}.figure-scroll{overflow-x:auto;background:white;border:1px solid var(--line)}
+.system-figure img{display:block;width:100%;height:auto;min-width:750px}
+.system-figure figcaption{font-size:14px;color:var(--muted);margin-top:10px}
+.to-complete{color:var(--muted);font-style:italic}.source{white-space:nowrap;font-size:14px}
+.sources li{margin-bottom:14px}.policy{padding:14px 18px 14px 36px!important;background:#f7f4f9;border-left:3px solid var(--purple)}
+.starter-code .codebox pre{max-height:620px;overflow:auto}.starter-code[open] summary{margin-bottom:15px}
+.codebox .syntax-keyword{color:#722080;font-weight:600}
+.codebox .syntax-string{color:#237146}
+.codebox .syntax-comment{color:#586370;font-style:italic}
+.codebox .syntax-number{color:#925000}
+.codebox .syntax-function,.codebox .syntax-command{color:#15588f;font-weight:600}
+.codebox .syntax-class,.codebox .syntax-builtin{color:#005f68}
+.codebox .syntax-decorator{color:#825000}
+.codebox .syntax-operator{color:#4b5060}
+.codebox .syntax-option{color:#722080}
+.codebox .syntax-argument{color:#4b5060}
+@media print{.starter-code .codebox pre{max-height:none}}
+.table-scroll:focus-visible,.figure-scroll:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+@media print{.system-figure{break-inside:avoid}.system-figure img{min-width:0}.figure-scroll,.table-scroll,.formula{overflow:visible}table{font-size:9pt}th,td{padding:6px}tr{break-inside:avoid}.formula{break-inside:avoid}}

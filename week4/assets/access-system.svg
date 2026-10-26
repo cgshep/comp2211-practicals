@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" viewBox="0 0 1100 560" role="img" aria-labelledby="title desc">
+<title id="title">Access checks in the guestbook</title>
+<desc id="desc">A Delete form sends a POST request to Flask. current_user checks the current account and session version. can_delete checks the account role and message author. The route removes the message only when permitted.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#572b68"/></marker></defs>
+<rect width="1100" height="560" fill="white"/>
+<g font-family="Arial, sans-serif" fill="#25232b">
+<text x="32" y="43" font-size="22" font-weight="bold">Who may delete this message?</text>
+<g stroke="#572b68" stroke-width="2" fill="#f7f4f9">
+<rect x="30" y="105" width="250" height="125" rx="6"/>
+<rect x="425" y="105" width="250" height="125" rx="6" fill="#572b68"/>
+<rect x="820" y="105" width="250" height="125" rx="6"/>
+<rect x="30" y="365" width="440" height="145" rx="6"/>
+<rect x="630" y="365" width="440" height="145" rx="6"/>
+</g>
+<g text-anchor="middle" font-size="19">
+<text x="155" y="144" font-weight="bold">Browser</text><text x="155" y="177" font-size="17">Signed session cookie</text><text x="155" y="204" font-size="17">Delete form and message ID</text>
+<g fill="white"><text x="550" y="144" font-weight="bold">Flask route</text><text x="550" y="177" font-size="17">delete_message(...)</text><text x="550" y="204" font-size="17">Enforces both checks</text></g>
+<text x="945" y="144" font-weight="bold">Guestbook messages</text><text x="945" y="177" font-size="17">Author and message text</text><text x="945" y="204" font-size="17">Held in memory</text>
+<text x="250" y="405" font-weight="bold">current_user()</text><text x="250" y="438" font-size="17">Check account status and session version</text><text x="250" y="468" font-size="17">Read current account from users.json data</text>
+<text x="850" y="405" font-weight="bold">can_delete(user, message)</text><text x="850" y="438" font-size="17">Check message author and account role</text><text x="850" y="468" font-size="17">Return allow or deny</text>
+</g>
+<g stroke="#572b68" stroke-width="2.5" fill="none" marker-end="url(#arrow)">
+<path d="M280 165H425"/><path d="M675 165H820" marker-start="url(#arrow)"/>
+<path d="M465 230V295H250V365" marker-start="url(#arrow)"/>
+<path d="M635 230V295H850V365" marker-start="url(#arrow)"/>
+</g>
+<g font-size="16" text-anchor="middle"><text x="350" y="150">POST</text><text x="748" y="150">Lookup</text><text x="330" y="282">Resolve identity</text><text x="775" y="282">Decide permission</text></g>
+<text x="550" y="545" font-size="17" text-anchor="middle">The route removes the message only after both checks succeed.</text>
+</g></svg>
